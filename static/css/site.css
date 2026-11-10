@@ -1,0 +1,10 @@
+/* Minimal scaffold styling. Bootstrap 5 UI will be added in the interface phase. */
+:root { color-scheme: dark; font-family: system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: #161a20; color: #e9ecef; }
+a { color: inherit; }
+.site-header, .site-footer { padding: 1rem max(1rem, calc((100vw - 1100px) / 2)); background: #222832; }
+.site-header nav { display: flex; gap: 2rem; align-items: center; }
+.nav-placeholder { color: #adb5bd; }
+.page-content { width: min(1100px, calc(100% - 2rem)); margin: 2rem auto; flex: 1; }
+.site-footer { color: #adb5bd; }

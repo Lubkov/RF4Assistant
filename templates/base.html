@@ -1,0 +1,16 @@
+{% load static %}
+<!doctype html>
+<html lang="ru" data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RF4 Assistant{% endblock %}</title>
+  <!-- Bootstrap UI is implemented in a later step. No external assets required for scaffold. -->
+  <link rel="stylesheet" href="{% static 'css/site.css' %}">
+</head>
+<body>
+  {% include "includes/navbar.html" %}
+  <main class="page-content">{% block content %}{% endblock %}</main>
+  {% include "includes/footer.html" %}
+</body>
+</html>
