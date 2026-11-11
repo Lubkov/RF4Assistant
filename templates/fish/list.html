@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Справочник видов рыб в Russian Fishing 4 — RF4 Assistant{% endblock %}
+
+{% block content %}
+<section aria-labelledby="fish-list-heading" id="fish-reference">
+  <h1 id="fish-list-heading" class="h2 mb-4 d-flex align-items-center gap-2">
+    <svg class="heading-icon flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 12c2-3.2 5-5 8.5-5 2.2 0 4.5 1 6 2.5L18 12l3 2.5C19.5 16 17.2 17 15 17c-3.5 0-6.5-1.8-8.5-5Z"/><path d="m7 8-3-2 1 4-2 2 2 2-1 4 3-2"/><circle cx="15.5" cy="10.5" r=".7" fill="currentColor" stroke="none"/></svg>
+    <span>Справочник видов рыб в Russian Fishing 4</span>
+  </h1>
+
+  <div class="row g-3 align-items-end mb-4" role="search" aria-label="Фильтры справочника рыб">
+    <div class="col-12 col-lg-4">
+      <label class="form-label" for="fish-name-filter">Название</label>
+      <input id="fish-name-filter" class="form-control" type="search" autocomplete="off" placeholder="Поиск по названию…">
+    </div>
+    <div class="col-12 col-lg-5">
+      <span class="form-label d-block" id="rarity-filter-label">Редкость</span>
+      <div class="d-flex flex-wrap gap-1" role="group" aria-labelledby="rarity-filter-label" id="fish-rarity-filters">
+        <button class="btn btn-primary fish-rarity-button" type="button" data-rarity="all" aria-pressed="true">Все</button>
+        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="1" aria-pressed="false"><img class="rarity-icon" src="{% static 'images/rarity-1.svg' %}" alt="">Обычный</button>
+        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="2" aria-pressed="false"><img class="rarity-icon" src="{% static 'images/rarity-2.svg' %}" alt="">Редкий</button>
+        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="3" aria-pressed="false"><img class="rarity-icon" src="{% static 'images/rarity-3.svg' %}" alt="">Редчайший</button>
+      </div>
+    </div>
+    <div class="col-12 col-lg-3">
+      <label class="form-label" for="fish-sort">Сортировка</label>
+      <select id="fish-sort" class="form-select">
+        <option value="name">По названию (А–Я)</option>
+        <option value="name-desc">По названию (Я–А)</option>
+        <option value="trophy-desc">По весу трофея ↓</option>
+        <option value="trophy-asc">По весу трофея ↑</option>
+        <option value="rarity-desc">По редкости ↓</option>
+        <option value="rarity-asc">По редкости ↑</option>
+      </select>
+    </div>
+  </div>
+
+  <p class="text-body-secondary small mb-2" id="fish-result-count" role="status" aria-live="polite">Видов: {{ fishes|length }}</p>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle fish-table" id="fish-table">
+      <thead>
+        <tr>
+          <th scope="col">Название</th>
+          <th scope="col" class="text-end">Вес трофея</th>
+          <th scope="col" class="text-end">Вес редкого трофея</th>
+          <th scope="col">Редкость</th>
+        </tr>
+      </thead>
+      <tbody id="fish-table-body">
+      {% for fish in fishes %}
+        <tr data-name="{{ fish.name|lower }}" data-trophy="{{ fish.trophy_weight }}" data-rarity="{{ fish.rarity }}">
+          <td class="fw-medium">
+            {% if fish.rarity == 1 %}
+              <img class="rarity-icon fish-name-rarity" src="{% static 'images/rarity-1.svg' %}" alt="" aria-hidden="true">
+            {% elif fish.rarity == 2 %}
+              <img class="rarity-icon fish-name-rarity" src="{% static 'images/rarity-2.svg' %}" alt="" aria-hidden="true">
+            {% elif fish.rarity == 3 %}
+              <img class="rarity-icon fish-name-rarity" src="{% static 'images/rarity-3.svg' %}" alt="" aria-hidden="true">
+            {% endif %}
+            {{ fish.name }}
+          </td>
+          <td class="text-end text-nowrap fish-weight" data-grams="{{ fish.trophy_weight }}">{{ fish.trophy_weight }} г</td>
+          <td class="text-end text-nowrap fish-weight"{% if fish.super_trophy_weight is not None %} data-grams="{{ fish.super_trophy_weight }}"{% endif %}>{% if fish.super_trophy_weight is not None %}{{ fish.super_trophy_weight }} г{% else %}—{% endif %}</td>
+          <td class="text-nowrap">
+            {% if fish.rarity == 1 %}
+              Обычный вид
+            {% elif fish.rarity == 2 %}
+              Редкий вид
+            {% elif fish.rarity == 3 %}
+              Редчайший вид
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p id="fish-empty-result" class="text-body-secondary d-none" role="status">По заданным условиям виды рыб не найдены.</p>
+</section>
+<script src="{% static 'js/fish-list.js' %}" defer></script>
+{% endblock %}

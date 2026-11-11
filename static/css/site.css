@@ -10,3 +10,18 @@ body { background-color: var(--bs-body-bg); }
 .waterbody-card-image { aspect-ratio: 16 / 9; width: 100%; height: auto; object-fit: cover; background: var(--bs-secondary-bg); }
 .theme-toggle { display: inline-flex; align-items: center; gap: .5rem; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } .waterbody-card { transition: none; } }
+
+/* Fish reference filters and table */
+.fish-rarity-button { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+.rarity-icon { width: 18px; height: 18px; object-fit: contain; vertical-align: -.2em; margin-right: .35rem; }
+.fish-rarity-button .rarity-icon { margin-right: 0; }
+.fish-table { min-width: 650px; }
+.fish-table th { white-space: nowrap; }
+.fish-table tbody tr[hidden] { display: none; }
+
+/* Small monochrome navigation icons follow the active Bootstrap theme. */
+.brand-icon { width: 24px; height: 24px; flex-shrink: 0; }
+.nav-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.heading-icon { width: 30px; height: 30px; }
+.nav-link.dropdown-toggle, .dropdown-item { display: inline-flex; align-items: center; gap: .45rem; }
+.fish-name-rarity { margin-right: .45rem; }

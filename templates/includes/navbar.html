@@ -1,20 +1,30 @@
 {% load static %}
 <header class="site-header border-bottom">
   <nav class="navbar navbar-expand-sm container" aria-label="Главное меню">
-    <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">RF4 Assistant</a>
+    <a class="navbar-brand fw-semibold d-inline-flex align-items-center gap-2" href="{% url 'core:home' %}">
+      <svg class="brand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3v12a6 6 0 1 1-6-6"/><path d="m12 12 3 3 3-3"/><circle cx="15" cy="3" r="1.5"/></svg>
+      <span>RF4 Assistant</span>
+    </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navigation" aria-controls="site-navigation" aria-expanded="false" aria-label="Открыть меню">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="site-navigation">
       <ul class="navbar-nav me-auto">
         <li class="nav-item dropdown">
-          <button class="nav-link dropdown-toggle btn btn-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">Карты</button>
+          <button class="nav-link dropdown-toggle btn btn-link" type="button" data-bs-toggle="dropdown" aria-expanded="false"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15m6-12v15"/></svg><span>Карты</span></button>
           <ul class="dropdown-menu map-dropdown">
             {% for waterbody in waterbodies %}
               <li><a class="dropdown-item" href="{% url 'core:home' %}#waterbody-{{ waterbody.id }}">{{ waterbody.name }}</a></li>
             {% empty %}
               <li><span class="dropdown-item-text text-body-secondary">Нет водоёмов</span></li>
             {% endfor %}
+          </ul>
+        </li>
+        <li class="nav-item dropdown">
+          <button class="nav-link dropdown-toggle btn btn-link{% if request.resolver_match.app_name == 'fish' %} active{% endif %}" type="button" data-bs-toggle="dropdown" aria-expanded="false"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 17l9 5 9-5"/></svg><span>Справочник</span></button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item{% if request.resolver_match.app_name == 'fish' %} active{% endif %}"
+                   href="{% url 'fish:list' %}"{% if request.resolver_match.app_name == 'fish' %} aria-current="page"{% endif %}><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 12c2-3.2 5-5 8.5-5 2.2 0 4.5 1 6 2.5L18 12l3 2.5C19.5 16 17.2 17 15 17c-3.5 0-6.5-1.8-8.5-5Z"/><path d="m7 8-3-2 1 4-2 2 2 2-1 4 3-2"/><circle cx="15.5" cy="10.5" r=".7" fill="currentColor" stroke="none"/></svg><span>Виды рыб</span></a></li>
           </ul>
         </li>
       </ul>
