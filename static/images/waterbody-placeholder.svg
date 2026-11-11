@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-label="Изображение водоёма пока не добавлено">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#263f55"/><stop offset="1" stop-color="#526e74"/></linearGradient>
+    <linearGradient id="lake" x2="0" y2="1"><stop stop-color="#385e69"/><stop offset="1" stop-color="#193c4f"/></linearGradient>
+  </defs>
+  <rect width="1280" height="720" fill="url(#sky)"/>
+  <circle cx="1000" cy="170" r="65" fill="#f2d6a0" opacity=".65"/>
+  <path d="M0 440 165 295 340 440 520 260 750 450 920 330 1120 445 1280 290V720H0Z" fill="#253e48"/>
+  <path d="M0 480 185 365 370 470 600 330 825 470 1050 370 1280 480V720H0Z" fill="#1c343b"/>
+  <path d="M0 465 Q310 438 640 465T1280 465V720H0Z" fill="url(#lake)"/>
+  <path d="M110 555h360m300 35h300m-480-65h140" stroke="#a5c1bd" stroke-width="4" opacity=".25" stroke-linecap="round"/>
+</svg>

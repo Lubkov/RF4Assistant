@@ -1,10 +1,12 @@
-/* Minimal scaffold styling. Bootstrap 5 UI will be added in the interface phase. */
-:root { color-scheme: dark; font-family: system-ui, sans-serif; }
-* { box-sizing: border-box; }
-body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; background: #161a20; color: #e9ecef; }
-a { color: inherit; }
-.site-header, .site-footer { padding: 1rem max(1rem, calc((100vw - 1100px) / 2)); background: #222832; }
-.site-header nav { display: flex; gap: 2rem; align-items: center; }
-.nav-placeholder { color: #adb5bd; }
-.page-content { width: min(1100px, calc(100% - 2rem)); margin: 2rem auto; flex: 1; }
-.site-footer { color: #adb5bd; }
+/* Minimal project-specific styling on top of Bootstrap 5. */
+:root { scroll-behavior: smooth; }
+body { background-color: var(--bs-body-bg); }
+.site-header, .site-footer { background: var(--bs-tertiary-bg); }
+.navbar-brand { letter-spacing: -.02em; }
+.map-dropdown { max-height: min(65vh, 430px); overflow-y: auto; }
+.waterbody-card { border-color: var(--bs-border-color); transition: border-color .15s ease, transform .15s ease; scroll-margin-top: 1.5rem; }
+.waterbody-card:hover { border-color: var(--bs-secondary-color); }
+.waterbody-card:target { outline: 2px solid var(--bs-primary); outline-offset: 3px; }
+.waterbody-card-image { aspect-ratio: 16 / 9; width: 100%; height: auto; object-fit: cover; background: var(--bs-secondary-bg); }
+.theme-toggle { display: inline-flex; align-items: center; gap: .5rem; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } .waterbody-card { transition: none; } }

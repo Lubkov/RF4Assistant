@@ -1,7 +1,19 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Водоёмы — RF4 Assistant{% endblock %}
 {% block content %}
-<section>
-  <h1>Водоёмы</h1>
-  <p>RF4 Assistant: каркас проекта готов. Карточки водоёмов появятся после создания моделей и загрузки начальных данных.</p>
+<section aria-labelledby="waterbodies-title">
+  <div class="mb-4">
+    <h1 class="h2 fw-semibold mb-1" id="waterbodies-title">Водоёмы</h1>
+    <p class="text-body-secondary mb-0">Карты и локации Russian Fishing 4</p>
+  </div>
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
+    {% for waterbody in waterbodies %}
+      <div class="col">
+        {% include 'waterbodies/_waterbody_card.html' with waterbody=waterbody %}
+      </div>
+    {% empty %}
+      <div class="col-12"><p class="text-body-secondary">Пока нет доступных водоёмов.</p></div>
+    {% endfor %}
+  </div>
 </section>
 {% endblock %}

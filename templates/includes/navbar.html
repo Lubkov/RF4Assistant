@@ -1,6 +1,27 @@
-<header class="site-header">
-  <nav aria-label="Главное меню">
-    <a href="{% url 'core:home' %}">RF4 Assistant</a>
-    <span class="nav-placeholder">Карты (скоро)</span>
+{% load static %}
+<header class="site-header border-bottom">
+  <nav class="navbar navbar-expand-sm container" aria-label="Главное меню">
+    <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">RF4 Assistant</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-navigation" aria-controls="site-navigation" aria-expanded="false" aria-label="Открыть меню">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="site-navigation">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item dropdown">
+          <button class="nav-link dropdown-toggle btn btn-link" type="button" data-bs-toggle="dropdown" aria-expanded="false">Карты</button>
+          <ul class="dropdown-menu map-dropdown">
+            {% for waterbody in waterbodies %}
+              <li><a class="dropdown-item" href="{% url 'core:home' %}#waterbody-{{ waterbody.id }}">{{ waterbody.name }}</a></li>
+            {% empty %}
+              <li><span class="dropdown-item-text text-body-secondary">Нет водоёмов</span></li>
+            {% endfor %}
+          </ul>
+        </li>
+      </ul>
+      <button type="button" id="theme-toggle" class="btn btn-outline-secondary btn-sm theme-toggle" aria-label="Переключить цветовую тему" title="Переключить цветовую тему">
+        <span class="theme-icon" aria-hidden="true">☀</span>
+        <span class="theme-label">Светлая тема</span>
+      </button>
+    </div>
   </nav>
 </header>

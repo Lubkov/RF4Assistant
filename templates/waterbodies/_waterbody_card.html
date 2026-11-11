@@ -1,1 +1,11 @@
-{# Card markup will be added when Waterbody model and Bootstrap interface are implemented. #}
+{% load static %}
+<article class="card waterbody-card h-100 overflow-hidden" id="waterbody-{{ waterbody.id }}" aria-label="{{ waterbody.name }}">
+  {% if waterbody.image %}
+    <img class="card-img-top waterbody-card-image" src="{{ waterbody.image.url }}" alt="{{ waterbody.name }}" loading="lazy" width="1280" height="720">
+  {% else %}
+    <img class="card-img-top waterbody-card-image" src="{% static 'images/waterbody-placeholder.svg' %}" alt="" loading="lazy" width="1280" height="720">
+  {% endif %}
+  <div class="card-body py-3">
+    <h2 class="card-title h6 mb-0">{{ waterbody.name }}</h2>
+  </div>
+</article>
