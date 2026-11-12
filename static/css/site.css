@@ -25,3 +25,13 @@ body { background-color: var(--bs-body-bg); }
 .heading-icon { width: 30px; height: 30px; }
 .nav-link.dropdown-toggle, .dropdown-item { display: inline-flex; align-items: center; gap: .45rem; }
 .fish-name-rarity { margin-right: .45rem; }
+
+
+/* Waterbody details and CRS.Simple image viewer */
+.waterbody-card-link { display: block; height: 100%; }
+.waterbody-card-link:focus-visible { outline: 3px solid var(--bs-primary); outline-offset: -3px; }
+.waterbody-card-link:hover .card-title { text-decoration: underline; }
+.game-map-container { max-width: 800px; margin-inline: auto; }
+.waterbody-map { width: 100%; aspect-ratio: 1 / 1; background: var(--bs-body-bg); overflow: hidden; }
+.waterbody-map .leaflet-image-layer { image-rendering: auto; }
+.waterbody-map.leaflet-container { background: var(--bs-body-bg); }

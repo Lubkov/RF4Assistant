@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ waterbody.name }} — RF4 Assistant{% endblock %}
+{% block extra_css %}
+  {% if game_map %}<link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">{% endif %}
+{% endblock %}
+{% block content %}
+<section aria-labelledby="waterbody-title">
+  <nav aria-label="Навигационная цепочка">
+    <ol class="breadcrumb mb-3">
+      <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Водоёмы</a></li>
+      <li class="breadcrumb-item active" aria-current="page">{{ waterbody.name }}</li>
+    </ol>
+  </nav>
+  <h1 id="waterbody-title" class="h2 fw-semibold mb-4">{{ waterbody.name }}</h1>
+  {% if game_map and game_map.image %}
+    <div class="game-map-container">
+      <div class="game-map-toolbar d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2">
+        <span class="text-body-secondary small">Игровая карта</span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Масштаб карты">
+          <button type="button" id="map-zoom-in" class="btn btn-outline-secondary" aria-label="Увеличить карту" title="Увеличить карту">+</button>
+          <button type="button" id="map-zoom-out" class="btn btn-outline-secondary" aria-label="Уменьшить карту" title="Уменьшить карту">−</button>
+          <button type="button" id="map-reset" class="btn btn-outline-secondary" title="Показать карту целиком">Сбросить масштаб</button>
+        </div>
+      </div>
+      <div id="waterbody-map" class="waterbody-map border rounded"
+           data-image-url="{{ game_map.image.url }}" data-image-alt="Карта: {{ waterbody.name }}"
+           aria-label="Интерактивная карта водоёма {{ waterbody.name }}"></div>
+      <p class="text-body-secondary small mt-2 mb-0" id="map-status" role="status">Колёсико мыши или кнопки +/− — масштаб. Перемещение карты отключено.</p>
+      <noscript><p>Для интерактивного просмотра нужен JavaScript.</p><img class="img-fluid" src="{{ game_map.image.url }}" alt="Карта: {{ waterbody.name }}"></noscript>
+      {% if game_map.source_url %}
+        <p class="small mt-2 mb-0 text-body-secondary">Источник: <a href="{{ game_map.source_url }}" target="_blank" rel="noopener noreferrer">страница изображения</a></p>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="alert alert-secondary" role="status">Карта этого водоёма пока не загружена.</div>
+  {% endif %}
+</section>
+{% endblock %}
+{% block extra_js %}
+  {% if game_map and game_map.image %}
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" defer></script>
+    <script src="{% static 'js/waterbody-map.js' %}" defer></script>
+  {% endif %}
+{% endblock %}

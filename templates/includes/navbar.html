@@ -14,7 +14,7 @@
           <button class="nav-link dropdown-toggle btn btn-link" type="button" data-bs-toggle="dropdown" aria-expanded="false"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3Z"/><path d="M9 3v15m6-12v15"/></svg><span>Карты</span></button>
           <ul class="dropdown-menu map-dropdown">
             {% for waterbody in waterbodies %}
-              <li><a class="dropdown-item" href="{% url 'core:home' %}#waterbody-{{ waterbody.id }}">{{ waterbody.name }}</a></li>
+              <li><a class="dropdown-item" href="{% url 'waterbodies:detail' waterbody.slug %}">{{ waterbody.name }}</a></li>
             {% empty %}
               <li><span class="dropdown-item-text text-body-secondary">Нет водоёмов</span></li>
             {% endfor %}

@@ -1,5 +1,6 @@
 {% load static %}
 <article class="card waterbody-card h-100 overflow-hidden" id="waterbody-{{ waterbody.id }}" aria-label="{{ waterbody.name }}">
+  <a href="{% url 'waterbodies:detail' waterbody.slug %}" class="waterbody-card-link text-decoration-none text-body" aria-label="Открыть карту: {{ waterbody.name }}">
   {% if waterbody.image %}
     <img class="card-img-top waterbody-card-image" src="{{ waterbody.image.url }}" alt="{{ waterbody.name }}" loading="lazy" width="1280" height="720">
   {% else %}
@@ -8,4 +9,5 @@
   <div class="card-body py-3">
     <h2 class="card-title h6 mb-0">{{ waterbody.name }}</h2>
   </div>
+  </a>
 </article>

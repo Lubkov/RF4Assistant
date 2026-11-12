@@ -19,3 +19,23 @@ class Waterbody(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class WaterbodyMap(models.Model):
+    """Game map image, independent from the waterbody's landscape card image."""
+
+    waterbody = models.OneToOneField(
+        Waterbody, on_delete=models.CASCADE, related_name="game_map",
+        verbose_name="Водоём",
+    )
+    image = models.ImageField(
+        "Игровая карта", upload_to="waterbodies/maps/",
+    )
+    source_url = models.URLField("Источник изображения", blank=True)
+
+    class Meta:
+        verbose_name = "Карта водоёма"
+        verbose_name_plural = "Карты водоёмов"
+
+    def __str__(self):
+        return f"Карта: {self.waterbody.name}"
