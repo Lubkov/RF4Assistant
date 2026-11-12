@@ -72,3 +72,36 @@ py -3.13 -m venv .venv
 ### Пример изображения
 
 В архиве включён образец карты `sample_maps/old_burg_lake.webp` (2048×2048) из предоставленного PNG. Загружайте файл вручную через Django Admin для «оз. Старый Острог». Не перемещайте его прямо в `media/` без создания записи `WaterbodyMap`. Рекомендовано использовать WebP с исходным разрешением 1600–2048px, если оно доступно, без искусственного увеличения.
+
+
+### Map viewer behavior update
+
+- Map viewing area is up to 800 × 800 px (responsive on narrow screens).
+- When the entire image fits the viewing area, dragging is disabled.
+- Zooming in enables dragging only if part of the image extends outside the viewing area; zooming back out disables it again.
+- The waterbody title includes the smaller access-level label (e.g. `1 ур.`).
+
+## Этап v0.4 — управление браузерным кэшем и UUID изображений
+
+- HTML-ответы (включая HTML-фрагменты HTMX): `Cache-Control: no-store` при `DEBUG=True`; `no-cache, must-revalidate` при `DEBUG=False` (`core/cache_middleware.py`).
+- Локальные CSS, JS и SVG в шаблонах вызываются через `{% load versioned_static %}` и `{% versioned_static '...' %}`. При `DEBUG=True` к URL добавляется SHA-256 содержимого, который меняется при изменении файла. При `DEBUG=False` используются URL файлов с хэшами Django `ManifestStaticFilesStorage`.
+- В production после обновления статических файлов обязательно выполняйте `python manage.py collectstatic --noinput` и настройте веб-сервер (или WhiteNoise) на обслуживание `STATIC_ROOT` /static/; Django `runserver` с `DEBUG=False` не является production-сервером статических файлов. Нельзя удалять прежние hashed-файлы, пока старые HTML-ответы ещё могут ссылаться на них.
+- Новые изображения `Waterbody.image` и `WaterbodyMap.image` через Django Admin получают уникальные UUID v4 имена. Загруженный `*.webp` превращается в `waterbodies/<uuid>.webp` или `waterbodies/maps/<uuid>.webp`; другие форматы сохраняют **настоящее расширение**, преобразования формата нет.
+- Старый файл удаляется при замене / удалении изображения **после commit транзакции** и только если к нему не обращаются другие записи. Внешняя ручная замена файла в `media/` с тем же именем не поддерживает версионирование; загружайте новый файл через Admin.
+- Существующие записи БД и пути изображений остаются без изменений. Миграция `waterbodies/0004_uuid_image_upload_paths.py` меняет только upload_to у полей.
+- При будущей настройке reverse proxy/CDN для `/media/` можно включить длительный кэш для UUID-имен, но избегайте такой политики для старых файлов с постоянными именами.
+
+### Обновление существующего проекта
+
+1. Сделайте резервные копии `db.sqlite3` и папки `media/` (если они содержат данные).
+2. Замените исходники проекта файлами из архива, сохранив свои локальные БД, медиафайлы и `.env`.
+3. В активированном виртуальном окружении выполните:
+
+   ```bat
+   .\.venv\Scripts\python.exe manage.py migrate
+   .\.venv\Scripts\python.exe manage.py check
+   .\.venv\Scripts\python.exe manage.py test
+   ```
+
+4. Запустите сайт как обычно; при следующей загрузке WebP через Admin имя будет новым UUID.
+5. Для production с `DEBUG=False` дополнительно выполните `collectstatic` и настройте раздачу `static/` и `media/` на веб-сервере.

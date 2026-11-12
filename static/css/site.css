@@ -35,3 +35,6 @@ body { background-color: var(--bs-body-bg); }
 .waterbody-map { width: 100%; aspect-ratio: 1 / 1; background: var(--bs-body-bg); overflow: hidden; }
 .waterbody-map .leaflet-image-layer { image-rendering: auto; }
 .waterbody-map.leaflet-container { background: var(--bs-body-bg); }
+
+/* Waterbody access level is secondary to the location name. */
+.waterbody-level { font-size: .55em; }

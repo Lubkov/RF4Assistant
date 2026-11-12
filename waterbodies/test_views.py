@@ -12,6 +12,7 @@ class WaterbodyPagesTests(TestCase):
         response = self.client.get(reverse("waterbodies:detail", args=[obj.slug]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, obj.name)
+        self.assertContains(response, f"{obj.level} ур.")
         self.assertContains(response, "Карта этого водоёма пока не загружена")
 
     def test_inactive_waterbody_is_not_public(self):
@@ -36,6 +37,7 @@ class WaterbodyPagesTests(TestCase):
                 self.assertEqual(response.status_code, 200)
                 self.assertContains(response, 'id="waterbody-map"')
                 self.assertContains(response, "waterbody-map.js")
+                self.assertNotContains(response, "Перемещение карты отключено")
 
     def test_one_map_per_waterbody(self):
         field = WaterbodyMap._meta.get_field("waterbody")

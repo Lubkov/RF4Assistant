@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load versioned_static %}
 
 {% block title %}Справочник видов рыб в Russian Fishing 4 — RF4 Assistant{% endblock %}
 
@@ -19,9 +19,9 @@
       <span class="form-label d-block" id="rarity-filter-label">Редкость</span>
       <div class="d-flex flex-wrap gap-1" role="group" aria-labelledby="rarity-filter-label" id="fish-rarity-filters">
         <button class="btn btn-primary fish-rarity-button" type="button" data-rarity="all" aria-pressed="true">Все</button>
-        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="1" aria-pressed="false"><img class="rarity-icon" src="{% static 'images/rarity-1.svg' %}" alt="">Обычный</button>
-        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="2" aria-pressed="false"><img class="rarity-icon" src="{% static 'images/rarity-2.svg' %}" alt="">Редкий</button>
-        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="3" aria-pressed="false"><img class="rarity-icon" src="{% static 'images/rarity-3.svg' %}" alt="">Редчайший</button>
+        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="1" aria-pressed="false"><img class="rarity-icon" src="{% versioned_static 'images/rarity-1.svg' %}" alt="">Обычный</button>
+        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="2" aria-pressed="false"><img class="rarity-icon" src="{% versioned_static 'images/rarity-2.svg' %}" alt="">Редкий</button>
+        <button class="btn btn-outline-secondary fish-rarity-button" type="button" data-rarity="3" aria-pressed="false"><img class="rarity-icon" src="{% versioned_static 'images/rarity-3.svg' %}" alt="">Редчайший</button>
       </div>
     </div>
     <div class="col-12 col-lg-3">
@@ -53,11 +53,11 @@
         <tr data-name="{{ fish.name|lower }}" data-trophy="{{ fish.trophy_weight }}" data-rarity="{{ fish.rarity }}">
           <td class="fw-medium">
             {% if fish.rarity == 1 %}
-              <img class="rarity-icon fish-name-rarity" src="{% static 'images/rarity-1.svg' %}" alt="" aria-hidden="true">
+              <img class="rarity-icon fish-name-rarity" src="{% versioned_static 'images/rarity-1.svg' %}" alt="" aria-hidden="true">
             {% elif fish.rarity == 2 %}
-              <img class="rarity-icon fish-name-rarity" src="{% static 'images/rarity-2.svg' %}" alt="" aria-hidden="true">
+              <img class="rarity-icon fish-name-rarity" src="{% versioned_static 'images/rarity-2.svg' %}" alt="" aria-hidden="true">
             {% elif fish.rarity == 3 %}
-              <img class="rarity-icon fish-name-rarity" src="{% static 'images/rarity-3.svg' %}" alt="" aria-hidden="true">
+              <img class="rarity-icon fish-name-rarity" src="{% versioned_static 'images/rarity-3.svg' %}" alt="" aria-hidden="true">
             {% endif %}
             {{ fish.name }}
           </td>
@@ -79,5 +79,5 @@
   </div>
   <p id="fish-empty-result" class="text-body-secondary d-none" role="status">По заданным условиям виды рыб не найдены.</p>
 </section>
-<script src="{% static 'js/fish-list.js' %}" defer></script>
+<script src="{% versioned_static 'js/fish-list.js' %}" defer></script>
 {% endblock %}

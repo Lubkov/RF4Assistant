@@ -29,6 +29,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.cache_middleware.HtmlCacheControlMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -70,3 +71,16 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Cache static files by content-hash in production, not by a fixed URL.
+# Run `python manage.py collectstatic --noinput` on deployment.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": (
+            "django.contrib.staticfiles.storage.StaticFilesStorage"
+            if DEBUG else
+            "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
+        ),
+    },
+}

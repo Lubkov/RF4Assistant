@@ -1,3 +1,4 @@
+from .upload_paths import waterbody_image_path, waterbody_map_path
 from django.db import models
 
 
@@ -7,7 +8,7 @@ class Waterbody(models.Model):
     slug = models.SlugField("URL-идентификатор", max_length=150, unique=True)
     description = models.TextField("Описание", blank=True)
     image = models.ImageField(
-        "Изображение", upload_to="waterbodies/", blank=True
+        "Изображение", upload_to=waterbody_image_path, blank=True
     )
     sort_order = models.PositiveIntegerField("Порядок сортировки", default=0)
     is_active = models.BooleanField("Активен", default=True)
@@ -29,7 +30,7 @@ class WaterbodyMap(models.Model):
         verbose_name="Водоём",
     )
     image = models.ImageField(
-        "Игровая карта", upload_to="waterbodies/maps/",
+        "Игровая карта", upload_to=waterbody_map_path,
     )
     source_url = models.URLField("Источник изображения", blank=True)
 

@@ -35,7 +35,7 @@
         zoomDelta: 0.5,
         maxBounds: bounds,
         maxBoundsViscosity: 1,
-        // Allow zoom, but keep the image centered and prevent dragging.
+        // Drag only after zooming beyond the visible image area.
         dragging: false,
         boxZoom: false,
         keyboard: false,
@@ -44,6 +44,21 @@
         doubleClickZoom: "center",
       });
       L.imageOverlay(imageUrl, bounds, { alt: container.dataset.imageAlt || "Карта водоёма" }).addTo(map);
+
+      // A fully visible image must stay fixed. Once either image dimension
+      // exceeds the viewport, panning is allowed so hidden parts remain reachable.
+      function updateDragging() {
+        const northWest = map.latLngToContainerPoint(bounds.getNorthWest());
+        const southEast = map.latLngToContainerPoint(bounds.getSouthEast());
+        const imageWidth = Math.abs(southEast.x - northWest.x);
+        const imageHeight = Math.abs(southEast.y - northWest.y);
+        const canDrag = imageWidth > container.clientWidth + 1 ||
+                        imageHeight > container.clientHeight + 1;
+        if (canDrag) map.dragging.enable();
+        else map.dragging.disable();
+      }
+
+      map.on("zoomend resize", updateDragging);
 
       let fitZoom;
       function fitImage() {
@@ -54,6 +69,7 @@
         fitZoom = map.getZoom();
         map.setMinZoom(fitZoom);
         map.setMaxZoom(Math.max(fitZoom + 3, 4));
+        updateDragging();
       }
       fitImage();
 
@@ -66,8 +82,9 @@
         const nextFitZoom = map.getBoundsZoom(bounds);
         if (nextFitZoom !== oldFitZoom) fitImage();
         else map.invalidateSize();
+        updateDragging();
       });
-      showStatus("Колёсико мыши или кнопки +/− — масштаб. Перемещение карты отключено.");
+      showStatus("Колёсико мыши или кнопки +/− — масштаб.");
     };
     image.onerror = function () { showStatus("Не удалось загрузить изображение карты."); };
     image.src = imageUrl;
