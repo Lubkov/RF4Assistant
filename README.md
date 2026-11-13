@@ -1,10 +1,26 @@
-# RF4 Assistant — Records filters v2.1
+# RF4 Assistant — Records UI v2.2: по наживкам
 
-Changes:
-- Restore **Все регионы** (`region=ALL`) as the default selection.
-- Remove **Все водоёмы** from the waterbody dropdown.
-- Default waterbody stays the first by `sort_order`, then name and ID.
-- If an old URL passes an empty `waterbody_id`, fall back to the first waterbody.
-- Keep automatic GET application of filters and period buttons.
+Патч поверх **UI v2.1**. Добавлены вкладки «По рыбам» и «По наживкам» на `/records/`.
 
-Replace the two files relative to your Django project root. No migrations required.
+В режиме «По наживкам» группировка выполняется по водоёму и **полной комбинации** наживок (например, «Мотыль и Опарыш» отдельно от «Мотыль»). Для каждой комбинации выводятся иконки наживок (если загружены), максимальный вес, количество уникальных уловов и виды рыб с иконками и количеством. Виды рыб сортируются по количеству, от большего к меньшему. Список разворачивается только когда не помещается в одну строку, как в режиме «По рыбам».
+
+Вкладки сохраняют выбранный период, регион, водоём, рыбу и сортировку. Параметр URL `view=fish|bait` (по умолчанию `fish`). Доступны те же фильтры с автоматическим применением.
+
+## Установка
+
+Распаковать содержимое архива в корень Django-проекта с заменой:
+
+- `records/analytics.py`
+- `records/views.py`
+- `records/test_bait_view.py` (новые тесты)
+- `templates/records/weekly.html`
+- `static/js/records.js`
+
+CSS версии v1.8 используется без изменений. База, миграции и сборщик не изменяются.
+
+```powershell
+.\.venv\Scripts\python.exe manage.py check
+.\.venv\Scripts\python.exe manage.py test records.test_bait_view
+```
+
+Обратите внимание: при переключении на «По наживкам» максимум веса — максимальный вес **среди всех рыб** соответствующей комбинации на выбранном водоёме и за выбранный период.

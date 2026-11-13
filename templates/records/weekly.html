@@ -13,6 +13,7 @@
 <section class="card mb-4" aria-label="Фильтры статистики">
   <div class="card-body">
     <form method="get" class="row g-3" id="records-filter-form">
+      <input type="hidden" name="view" value="{{ selected_view }}">
       <div class="col-12">
         <div class="d-flex flex-wrap align-items-center gap-2" role="group" aria-label="Период статистики">
           <span class="me-2 fw-semibold">Период:</span>
@@ -44,7 +45,7 @@
         </select>
       </div>
       <div class="col-8 col-lg-4">
-        <label class="form-label" for="sort">Сортировать рыбу по</label>
+        <label class="form-label" for="sort">Сортировать {% if selected_view == "bait" %}наживки{% else %}рыбу{% endif %} по</label>
         <select id="sort" name="sort" class="form-select">
           {% for code, name in sort_options %}<option value="{{ code }}"{% if data.sort == code %} selected{% endif %}>{{ name }}</option>{% endfor %}
         </select>
@@ -53,12 +54,17 @@
   </div>
 </section>
 
+<nav class="nav nav-tabs mb-3" aria-label="Группировка рекордов">
+  <a class="nav-link{% if selected_view == 'fish' %} active{% endif %}" href="{{ view_urls.fish }}"{% if selected_view == 'fish' %} aria-current="page"{% endif %}>По рыбам</a>
+  <a class="nav-link{% if selected_view == 'bait' %} active{% endif %}" href="{{ view_urls.bait }}"{% if selected_view == 'bait' %} aria-current="page"{% endif %}>По наживкам</a>
+</nav>
+
 {% for waterbody in data.waterbody_groups %}
 <details class="card records-waterbody mb-3"{% if waterbody.expanded %} open{% endif %}>
   <summary class="card-header records-waterbody-heading">
     <span class="fw-semibold">{{ waterbody.name }}</span>
     <span class="d-inline-flex flex-wrap gap-2 align-items-center text-body-secondary small">
-      <span>{{ waterbody.fish_count }} видов</span>
+      <span>{% if selected_view == "bait" %}{{ waterbody.bait_count }} наживок{% else %}{{ waterbody.fish_count }} видов{% endif %}</span>
       <span class="badge text-bg-secondary">{{ waterbody.record_count }} рекордов</span>
       <span class="records-chevron" aria-hidden="true">⌄</span>
     </span>
@@ -66,13 +72,64 @@
   <div class="table-responsive">
     <table class="table table-hover align-middle records-table mb-0">
       <thead><tr>
-        <th scope="col">Рыба</th>
+        <th scope="col">{% if selected_view == "bait" %}Наживка{% else %}Рыба{% endif %}</th>
         <th scope="col" class="text-end">Макс. вес</th>
         <th scope="col" class="text-center records-count-column">Кол-во рекордов</th>
-        <th scope="col">Наживки</th>
+        <th scope="col">{% if selected_view == "bait" %}Виды рыб{% else %}Наживки{% endif %}</th>
       </tr></thead>
       <tbody>
         {% for row in waterbody.rows %}
+{% if selected_view == "bait" %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2 records-fish-cell">
+              {% if row.bait_images %}
+                {% for icon_url in row.bait_images %}<img class="records-fish-icon" src="{{ icon_url }}" alt="" loading="lazy" width="36" height="36">{% endfor %}
+              {% else %}<span class="records-fish-icon records-icon-placeholder" aria-hidden="true">🎣</span>{% endif %}
+              <span class="fw-medium">{{ row.bait }}</span>
+            </div>
+          </td>
+          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
+          <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
+          <td class="records-baits-cell">
+            {% if row.fish_details|length > 1 %}
+            <details class="records-baits-details" data-record-expand>
+              <summary class="records-baits-summary" aria-label="Виды рыб для {{ row.bait }}: развернуть или свернуть">
+                <span class="records-bait-preview" aria-hidden="true">
+                  {% for fish in row.fish_details %}
+                  <span class="records-bait-item" title="{{ fish.fish }} — {{ fish.count }}">
+                    {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
+                    <span>{{ fish.fish }}</span><strong class="records-bait-count">{{ fish.count }}</strong>
+                  </span>
+                  {% endfor %}
+                </span>
+                <span class="records-bait-toggle records-bait-item text-nowrap">
+                  <span class="records-bait-show">Показать ({{ row.fish_details|length }}) <span class="records-toggle-chevron" aria-hidden="true">⌄</span></span>
+                  <span class="records-bait-hide">Свернуть <span class="records-toggle-chevron" aria-hidden="true">⌃</span></span>
+                </span>
+              </summary>
+              <div class="records-bait-list records-bait-list-expanded">
+                {% for fish in row.fish_details %}
+                <span class="records-bait-item" title="{{ fish.fish }} — {{ fish.count }}">
+                  {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
+                  <span>{{ fish.fish }}</span><strong class="records-bait-count">{{ fish.count }}</strong>
+                </span>
+                {% endfor %}
+              </div>
+            </details>
+            {% else %}
+            <div class="records-bait-list records-bait-single">
+              {% for fish in row.fish_details %}
+              <span class="records-bait-item" title="{{ fish.fish }} — {{ fish.count }}">
+                {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
+                <span>{{ fish.fish }}</span><strong class="records-bait-count">{{ fish.count }}</strong>
+              </span>
+              {% endfor %}
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+{% else %}
         <tr>
           <td>
             <div class="d-flex align-items-center gap-2 records-fish-cell">
@@ -85,7 +142,7 @@
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
           <td class="records-baits-cell">
             {% if row.bait_details|length > 1 %}
-            <details class="records-baits-details" data-record-baits>
+            <details class="records-baits-details" data-record-expand>
               <summary class="records-baits-summary" aria-label="Наживки для {{ row.fish }}: развернуть или свернуть полный список">
                 <span class="records-bait-preview" aria-hidden="true">
                   {% for bait in row.bait_details %}
@@ -124,6 +181,7 @@
             {% endif %}
           </td>
         </tr>
+{% endif %}
         {% endfor %}
       </tbody>
     </table>

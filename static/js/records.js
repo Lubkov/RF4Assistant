@@ -24,9 +24,9 @@
 })();
 
 
-// Show the bait disclosure only when the chips do not fit in one line.
+// Show the disclosure only when bait or fish chips do not fit in one line.
 (() => {
-  const detailsNodes = [...document.querySelectorAll("[data-record-baits]")];
+  const detailsNodes = [...document.querySelectorAll("[data-record-expand]")];
   if (!detailsNodes.length) return;
 
   const measure = (details) => {
@@ -44,12 +44,12 @@
     const required = widths.reduce((total, width) => total + width, 0)
       + Math.max(0, chips.length - 1) * gap;
 
-    // First test whether all bait chips fit without the disclosure control.
+    // First test whether all chips fit without the disclosure control.
     const fits = required <= summary.clientWidth + 1;
     details.classList.toggle("records-baits-fit", fits);
     const toggle = details.querySelector(".records-bait-toggle");
     if (toggle) toggle.setAttribute("aria-hidden", String(fits));
-    summary.setAttribute("aria-label", fits ? "Все наживки помещаются в строке" : "Развернуть список наживок");
+    summary.setAttribute("aria-label", fits ? "Все элементы помещаются в строке" : "Развернуть список");
     summary.tabIndex = fits ? -1 : 0;
     if (fits) return;
 
@@ -77,7 +77,7 @@
     });
     details.addEventListener("toggle", () => {
       if (!details.open) requestAnimationFrame(() => measure(details));
-      else summary?.setAttribute("aria-label", "Свернуть список наживок");
+      else summary?.setAttribute("aria-label", "Свернуть список");
     });
   }
 
