@@ -1,29 +1,10 @@
-# RF4 Assistant — Records UI v1.5
+# RF4 Assistant — Records filters v2.1
 
-Патч обновляет только страницу `/records/` и агрегирование для неё. Не изменяет Django-модели, миграции, таблицы SQLite, сборщик или каталог `media`.
+Changes:
+- Restore **Все регионы** (`region=ALL`) as the default selection.
+- Remove **Все водоёмы** from the waterbody dropdown.
+- Default waterbody stays the first by `sort_order`, then name and ID.
+- If an old URL passes an empty `waterbody_id`, fall back to the first waterbody.
+- Keep automatic GET application of filters and period buttons.
 
-## Установка
-
-1. Остановите Django `runserver` (сборщик можно оставить работающим — патч не меняет его код).
-2. Сохраните резервную копию текущих файлов `records/analytics.py`, `records/views.py`, `records/tests.py`, `templates/records/weekly.html`.
-3. Распакуйте архив в корень проекта (рядом с `manage.py`) с заменой файлов.
-4. Запустите проверки:
-
-```powershell
-.\.venv\Scripts\python.exe manage.py check
-.\.venv\Scripts\python.exe manage.py test records
-.\.venv\Scripts\python.exe manage.py runserver
-```
-
-5. Откройте `http://127.0.0.1:8000/records/`. Если браузер кэширует стиль, сделайте Ctrl+F5; новые CSS/JS подключены через текущий механизм `versioned_static`.
-
-## Функции
-
-- Фильтры: даты, регион, водоём, рыба; быстрые кнопки «2 / 7 / 14 дней» меняют даты и не отправляют форму без подтверждения.
-- Сортировка рыб внутри водоёма: количество уловов (по умолчанию), максимальный вес, название.
-- Разделы водоёмов раскрываются по клику; разделы расположены по общему количеству рекордов.
-- Иконки рыб и компонентов наживок из локальных `ImageField` (если загружены).
-- Одна комбинация наживок, включая «Муха и Муха», учитывается как одна категория; `baits` в Python-отчёте остаётся обратно совместимым.
-- Сохранена уникальность улова между регионами за счёт существующей модели `WeeklyCatchRegion`.
-
-Миграции не нужны. В архив **не включены** данные базы, загруженные иконки или другие локальные файлы.
+Replace the two files relative to your Django project root. No migrations required.

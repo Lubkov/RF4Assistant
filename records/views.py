@@ -12,12 +12,26 @@ from .sources import REGION_NAMES
 
 def weekly_report(request):
     today = timezone.localdate()
-    start = request.GET.get("date_from", (today - timedelta(days=1)).isoformat())
-    end = request.GET.get("date_to", today.isoformat())
-    region = request.GET.get("region", "ALL").upper()
-    sort = request.GET.get("sort", "count")
     try:
-        wb = int(request.GET["waterbody_id"]) if request.GET.get("waterbody_id") else None
+        days = int(request.GET.get("days", "1"))
+    except (ValueError, TypeError):
+        return HttpResponseBadRequest("Некорректный период")
+    if days not in (1, 2, 3, 7):
+        return HttpResponseBadRequest("Недопустимый период")
+    start = (today - timedelta(days=days - 1)).isoformat()
+    end = today.isoformat()
+    # Show all regions by default; individual region selection remains available.
+    region = request.GET.get("region", "ALL").upper() or "ALL"
+    if region != "ALL" and region not in REGION_NAMES:
+        return HttpResponseBadRequest("Некорректный регион")
+    sort = request.GET.get("sort", "count")
+    waterbodies = Waterbody.objects.order_by("sort_order", "name", "id")
+    first_waterbody = waterbodies.values_list("pk", flat=True).first()
+    try:
+        if "waterbody_id" in request.GET:
+            wb = int(request.GET["waterbody_id"]) if request.GET.get("waterbody_id") else first_waterbody
+        else:
+            wb = first_waterbody
         fish = int(request.GET["fish_id"]) if request.GET.get("fish_id") else None
         data = report(
             date_from=start, date_to=end,
@@ -27,7 +41,8 @@ def weekly_report(request):
         return HttpResponseBadRequest(f"Некорректные параметры отчёта: {exc}")
     return render(request, "records/weekly.html", {
         "data": data,
-        "waterbodies": Waterbody.objects.order_by("name"),
+        "waterbodies": waterbodies,
+        "selected_days": days,
         "fishes": Fish.objects.order_by("name"),
         "selected_waterbody": wb,
         "selected_fish": fish,
