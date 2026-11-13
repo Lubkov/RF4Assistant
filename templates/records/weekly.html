@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load versioned_static %}
+{% block title %}Статистика рекордов — RF4 Assistant{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% versioned_static 'css/records.css' %}">{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+  <div>
+    <h1 class="h3 mb-2">Статистика недельных рекордов</h1>
+    <p class="text-body-secondary mb-0">Уникальные уловы из недельных рейтингов RF4, а не все уловы игроков.</p>
+  </div>
+  <span class="badge text-bg-secondary fw-normal align-self-center">{{ data.date_from }} — {{ data.date_to }}</span>
+</div>
+
+<section class="card mb-4" aria-label="Фильтры статистики">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <h2 class="h6 mb-0">Фильтры</h2>
+      <div class="d-flex gap-2" aria-label="Быстрый период">
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-record-days="2">2 дня</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-record-days="7">7 дней</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-record-days="14">14 дней</button>
+      </div>
+    </div>
+    <form method="get" class="row g-3" id="records-filter-form">
+      <div class="col-6 col-lg-2">
+        <label class="form-label" for="date_from">Дата с</label>
+        <input class="form-control" type="date" id="date_from" name="date_from" value="{{ data.date_from }}" required>
+      </div>
+      <div class="col-6 col-lg-2">
+        <label class="form-label" for="date_to">Дата по</label>
+        <input class="form-control" type="date" id="date_to" name="date_to" value="{{ data.date_to }}" required>
+      </div>
+      <div class="col-6 col-lg-2">
+        <label class="form-label" for="region">Регион</label>
+        <select id="region" name="region" class="form-select">
+          <option value="ALL">Все регионы</option>
+          {% for code, name in regions.items %}<option value="{{ code }}"{% if selected_region == code %} selected{% endif %}>{{ code }} — {{ name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-lg-3">
+        <label class="form-label" for="waterbody">Водоём</label>
+        <select id="waterbody" name="waterbody_id" class="form-select">
+          <option value="">Все водоёмы</option>
+          {% for wb in waterbodies %}<option value="{{ wb.id }}"{% if wb.id == selected_waterbody %} selected{% endif %}>{{ wb.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-lg-3">
+        <label class="form-label" for="fish">Рыба</label>
+        <select id="fish" name="fish_id" class="form-select">
+          <option value="">Все виды</option>
+          {% for f in fishes %}<option value="{{ f.id }}"{% if f.id == selected_fish %} selected{% endif %}>{{ f.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-8 col-lg-4">
+        <label class="form-label" for="sort">Сортировать рыбу по</label>
+        <select id="sort" name="sort" class="form-select">
+          {% for code, name in sort_options %}<option value="{{ code }}"{% if data.sort == code %} selected{% endif %}>{{ name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="col-4 col-lg-3 d-flex align-items-end gap-2">
+        <button class="btn btn-primary flex-grow-1" type="submit">Показать</button>
+        <a class="btn btn-outline-secondary" href="{% url 'records:weekly' %}" title="Сбросить фильтры">Сброс</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<div class="row g-3 mb-4" aria-label="Итоги периода">
+  <div class="col-6 col-md-4">
+    <div class="card h-100"><div class="card-body">
+      <div class="small text-body-secondary mb-1">Уникальных уловов</div>
+      <div class="h3 mb-0">{{ data.total_unique_catches }}</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-4">
+    <div class="card h-100"><div class="card-body">
+      <div class="small text-body-secondary mb-1">Водоёмов</div>
+      <div class="h3 mb-0">{{ data.total_waterbodies }}</div>
+    </div></div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card h-100"><div class="card-body">
+      <div class="small text-body-secondary mb-1">Групп «водоём + рыба»</div>
+      <div class="h3 mb-0">{{ data.total_groups }}</div>
+    </div></div>
+  </div>
+</div>
+
+{% for waterbody in data.waterbody_groups %}
+<details class="card records-waterbody mb-3"{% if waterbody.expanded %} open{% endif %}>
+  <summary class="card-header records-waterbody-heading">
+    <span class="fw-semibold">{{ waterbody.name }}</span>
+    <span class="d-inline-flex flex-wrap gap-2 align-items-center text-body-secondary small">
+      <span>{{ waterbody.fish_count }} видов</span>
+      <span class="badge text-bg-secondary">{{ waterbody.record_count }} рекордов</span>
+      <span class="records-chevron" aria-hidden="true">⌄</span>
+    </span>
+  </summary>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle records-table mb-0">
+      <thead><tr>
+        <th scope="col">Рыба</th>
+        <th scope="col" class="text-end">Макс. вес</th>
+        <th scope="col" class="text-end">Рекордов</th>
+        <th scope="col">Наживки (количество)</th>
+      </tr></thead>
+      <tbody>
+        {% for row in waterbody.rows %}
+        <tr>
+          <td>
+            <div class="d-flex align-items-center gap-2 records-fish-cell">
+              {% if row.fish_image_url %}<img class="records-fish-icon" src="{{ row.fish_image_url }}" alt="" loading="lazy" width="36" height="36">
+              {% else %}<span class="records-fish-icon records-icon-placeholder" aria-hidden="true">🐟</span>{% endif %}
+              <span class="fw-medium">{{ row.fish }}</span>
+            </div>
+          </td>
+          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
+          <td class="text-end fw-semibold">{{ row.record_count }}</td>
+          <td>
+            <div class="d-flex flex-wrap gap-2 records-bait-list">
+              {% for bait in row.bait_details %}
+              <span class="records-bait-item" title="{{ bait.bait }} — {{ bait.count }}">
+                {% for icon_url in bait.images %}{% if icon_url %}<img src="{{ icon_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}{% endfor %}
+                <span>{{ bait.bait }}</span>
+                <strong class="records-bait-count">{{ bait.count }}</strong>
+              </span>
+              {% endfor %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</details>
+{% empty %}
+<div class="card"><div class="card-body py-5 text-center">
+  <h2 class="h5">Рекордов за выбранный период нет</h2>
+  <p class="text-body-secondary mb-0">Попробуй расширить период или сбросить фильтры.</p>
+</div></div>
+{% endfor %}
+<p class="small text-body-secondary mt-3">Количество по комбинациям наживок в каждой строке равно количеству рекордов: «Мотыль и Опарыш» считается одной комбинацией.</p>
+{% endblock %}
+{% block extra_js %}<script src="{% versioned_static 'js/records.js' %}" defer></script>{% endblock %}

@@ -1,0 +1,1 @@
+.\.venv\Scripts\python.exe manage.py collect_weekly_records --loop --interval-minutes 10

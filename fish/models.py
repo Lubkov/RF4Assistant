@@ -16,6 +16,7 @@ class Fish(models.Model):
         "Редкость", choices=Rarity.choices, default=Rarity.COMMON
     )
     description = models.TextField("Описание", blank=True)
+    image = models.ImageField("Иконка", upload_to="fish/icons/", blank=True)
     is_active = models.BooleanField("Активна", default=True)
 
     class Meta:

@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     "core.apps.CoreConfig",
     "waterbodies.apps.WaterbodiesConfig",
     "fish.apps.FishConfig",
+    "records.apps.RecordsConfig",
 ]
 
 MIDDLEWARE = [
@@ -84,3 +85,5 @@ STORAGES = {
         ),
     },
 }
+
+# A separate management-command worker handles scheduled collection, never runserver threads.

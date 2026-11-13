@@ -1,0 +1,36 @@
+.records-waterbody { overflow: hidden; }
+.records-waterbody-heading {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  padding: .9rem 1rem;
+}
+.records-waterbody-heading::-webkit-details-marker { display: none; }
+.records-waterbody-heading:hover { background: var(--bs-tertiary-bg); }
+.records-waterbody-heading:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: -2px; }
+.records-chevron { display: inline-block; font-size: 1.25rem; line-height: 1; transition: transform .15s ease; }
+.records-waterbody[open] .records-chevron { transform: rotate(180deg); }
+.records-table { min-width: 700px; }
+.records-table th { white-space: nowrap; font-size: .85rem; color: var(--bs-secondary-color); }
+.records-table th:nth-child(1) { min-width: 175px; }
+.records-table th:nth-child(4) { width: 55%; }
+.records-fish-icon { width: 36px; height: 36px; object-fit: contain; flex: 0 0 36px; }
+.records-icon-placeholder { display: inline-flex; justify-content: center; align-items: center; font-size: 1.15rem; }
+.records-bait-list { row-gap: .375rem !important; }
+.records-bait-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .45rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: .45rem;
+  background: var(--bs-tertiary-bg);
+  font-size: .83rem;
+  overflow-wrap: anywhere;
+}
+.records-bait-icon { width: 24px; height: 24px; object-fit: contain; }
+.records-bait-count { color: var(--bs-body-color); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .records-chevron { transition: none; } }

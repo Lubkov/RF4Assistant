@@ -13,3 +13,7 @@ staticfiles/
 .vscode/
 .idea/
 .pytest_cache/
+
+# Records worker diagnostics and exports
+record-logs/
+record-reports/

@@ -6,7 +6,7 @@ from .models import Fish
 @admin.register(Fish)
 class FishAdmin(admin.ModelAdmin):
     list_display = (
-        "name", "rarity", "trophy_weight", "super_trophy_weight", "is_active",
+        "name", "image", "rarity", "trophy_weight", "super_trophy_weight", "is_active",
     )
     list_display_links = ("name",)
     list_filter = ("rarity", "is_active")
@@ -15,5 +15,5 @@ class FishAdmin(admin.ModelAdmin):
     list_per_page = 50
     fields = (
         "name", "rarity", "trophy_weight", "super_trophy_weight",
-        "description", "is_active",
+        "description", "image", "is_active",
     )

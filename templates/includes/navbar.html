@@ -27,6 +27,7 @@
                    href="{% url 'fish:list' %}"{% if request.resolver_match.app_name == 'fish' %} aria-current="page"{% endif %}><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 12c2-3.2 5-5 8.5-5 2.2 0 4.5 1 6 2.5L18 12l3 2.5C19.5 16 17.2 17 15 17c-3.5 0-6.5-1.8-8.5-5Z"/><path d="m7 8-3-2 1 4-2 2 2 2-1 4 3-2"/><circle cx="15.5" cy="10.5" r=".7" fill="currentColor" stroke="none"/></svg><span>Виды рыб</span></a></li>
           </ul>
         </li>
+        <li class="nav-item"><a class="nav-link{% if request.resolver_match.app_name == 'records' %} active{% endif %}" href="{% url 'records:weekly' %}">Рекорды</a></li>
       </ul>
       <button type="button" id="theme-toggle" class="btn btn-outline-secondary btn-sm theme-toggle" aria-label="Переключить цветовую тему" title="Переключить цветовую тему">
         <span class="theme-icon" aria-hidden="true">☀</span>
