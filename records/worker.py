@@ -1,6 +1,7 @@
 """Collector runs in its OWN OS process, not inside Django's HTTP server."""
 import json
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from playwright.sync_api import sync_playwright
@@ -29,7 +30,15 @@ def run_weekly(*, regions=None, headless=True, timeout=45, output=None):
     output.mkdir(exist_ok=True, parents=True)
     results, errors = [], []
     with ThreadPoolExecutor(max_workers=1, thread_name_prefix="records-db") as db_executor, sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=headless)
+        chromium_path = os.environ.get("RF4_CHROMIUM_PATH")
+        if chromium_path:
+            browser = playwright.chromium.launch(
+                headless=headless,
+                executable_path=chromium_path,
+                args=["--no-sandbox", "--disable-dev-shm-usage"],
+            )
+        else:
+            browser = playwright.chromium.launch(headless=headless)
         try:
             page = browser.new_page(locale="ru-RU")
             def load(url):
@@ -39,6 +48,11 @@ def run_weekly(*, regions=None, headless=True, timeout=45, output=None):
                     raise ValueError(f"HTTP {response.status}")
                 return page.content(), page.url
             html, _ = load(TYPES["weekly"])
+            if chromium_path:
+                page.locator('a[href*="/records/weekly/region/"]').first.wait_for(
+                    state="attached", timeout=60000
+                )
+                html = page.content()
             sources = discover_sources(html, "weekly")
             if not sources:
                 raise ValueError("No region links found: the page may be blocked")
