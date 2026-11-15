@@ -24,3 +24,27 @@ class FishListPageTests(TestCase):
         self.assertContains(response, 'href="/fish/"')
         self.assertContains(response, 'Справочник</button>')
         self.assertContains(response, 'Виды рыб</a>')
+
+    def test_fish_icons_and_rarity_icons_are_in_the_correct_columns(self):
+        with_icon = Fish.objects.create(name="С иконкой", trophy_weight=1000, rarity=2)
+        with_icon.image = "fish/icons/example.webp"
+        with_icon.save(update_fields=["image"])
+        Fish.objects.create(name="Без иконки", trophy_weight=2000, rarity=3)
+
+        response = self.client.get(reverse("fish:list"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '/media/fish/icons/example.webp')
+        self.assertContains(response, 'fish-list-icon-placeholder')
+        self.assertNotContains(response, 'fish-name-rarity')
+
+        from bs4 import BeautifulSoup
+        soup = BeautifulSoup(response.content, "html.parser")
+        rows = soup.select("#fish-table-body tr")
+        row_with_icon = next(row for row in rows if row["data-name"] == "с иконкой")
+        name_cell, _, _, rarity_cell = row_with_icon.select("td")
+        self.assertIn("/media/fish/icons/example.webp", name_cell.select_one("img")["src"])
+        self.assertFalse(name_cell.select("img.rarity-icon"))
+        self.assertIn("rarity-2.svg", rarity_cell.select_one("img")["src"])
+        row_without_icon = next(row for row in rows if row["data-name"] == "без иконки")
+        self.assertIsNotNone(row_without_icon.select_one("td .fish-list-icon-placeholder"))
+        self.assertIn("rarity-3.svg", row_without_icon.select("td")[3].select_one("img")["src"])

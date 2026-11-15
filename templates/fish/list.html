@@ -45,31 +45,31 @@
           <th scope="col">Название</th>
           <th scope="col" class="text-end">Вес трофея</th>
           <th scope="col" class="text-end">Вес редкого трофея</th>
-          <th scope="col">Редкость</th>
+          <th scope="col" class="fish-rarity-column text-start">Редкость</th>
         </tr>
       </thead>
       <tbody id="fish-table-body">
       {% for fish in fishes %}
         <tr data-name="{{ fish.name|lower }}" data-trophy="{{ fish.trophy_weight }}" data-rarity="{{ fish.rarity }}">
           <td class="fw-medium">
-            {% if fish.rarity == 1 %}
-              <img class="rarity-icon fish-name-rarity" src="{% versioned_static 'images/rarity-1.svg' %}" alt="" aria-hidden="true">
-            {% elif fish.rarity == 2 %}
-              <img class="rarity-icon fish-name-rarity" src="{% versioned_static 'images/rarity-2.svg' %}" alt="" aria-hidden="true">
-            {% elif fish.rarity == 3 %}
-              <img class="rarity-icon fish-name-rarity" src="{% versioned_static 'images/rarity-3.svg' %}" alt="" aria-hidden="true">
-            {% endif %}
-            {{ fish.name }}
+            <span class="d-inline-flex align-items-center gap-2">
+              {% if fish.image %}
+                <img class="fish-list-icon" src="{{ fish.image.url }}" alt="" loading="lazy" width="36" height="36">
+              {% else %}
+                <span class="fish-list-icon fish-list-icon-placeholder" aria-hidden="true">🐟</span>
+              {% endif %}
+              <span>{{ fish.name }}</span>
+            </span>
           </td>
           <td class="text-end text-nowrap fish-weight" data-grams="{{ fish.trophy_weight }}">{{ fish.trophy_weight }} г</td>
           <td class="text-end text-nowrap fish-weight"{% if fish.super_trophy_weight is not None %} data-grams="{{ fish.super_trophy_weight }}"{% endif %}>{% if fish.super_trophy_weight is not None %}{{ fish.super_trophy_weight }} г{% else %}—{% endif %}</td>
-          <td class="text-nowrap">
+          <td class="text-nowrap text-start fish-rarity-column">
             {% if fish.rarity == 1 %}
-              Обычный вид
+              <img class="rarity-icon" src="{% versioned_static 'images/rarity-1.svg' %}" alt="" aria-hidden="true">Обычный вид
             {% elif fish.rarity == 2 %}
-              Редкий вид
+              <img class="rarity-icon" src="{% versioned_static 'images/rarity-2.svg' %}" alt="" aria-hidden="true">Редкий вид
             {% elif fish.rarity == 3 %}
-              Редчайший вид
+              <img class="rarity-icon" src="{% versioned_static 'images/rarity-3.svg' %}" alt="" aria-hidden="true">Редчайший вид
             {% endif %}
           </td>
         </tr>

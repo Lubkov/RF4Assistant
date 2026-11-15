@@ -17,6 +17,8 @@ body { background-color: var(--bs-body-bg); }
 .fish-rarity-button .rarity-icon { margin-right: 0; }
 .fish-table { min-width: 650px; }
 .fish-table th { white-space: nowrap; }
+/* Separate right-aligned rare-trophy weights from left-aligned rarity labels. */
+.fish-table .fish-rarity-column { padding-left: 2rem; }
 .fish-table tbody tr[hidden] { display: none; }
 
 /* Small monochrome navigation icons follow the active Bootstrap theme. */
@@ -24,7 +26,8 @@ body { background-color: var(--bs-body-bg); }
 .nav-icon { width: 18px; height: 18px; flex-shrink: 0; }
 .heading-icon { width: 30px; height: 30px; }
 .nav-link.dropdown-toggle, .dropdown-item { display: inline-flex; align-items: center; gap: .45rem; }
-.fish-name-rarity { margin-right: .45rem; }
+.fish-list-icon { width: 36px; height: 36px; object-fit: contain; flex: 0 0 36px; }
+.fish-list-icon-placeholder { display: inline-flex; align-items: center; justify-content: center; font-size: 1.15rem; }
 
 
 /* Waterbody details and CRS.Simple image viewer */
