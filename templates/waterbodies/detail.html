@@ -30,12 +30,12 @@
   {% if game_map and game_map.image %}
     <div class="game-map-container">
       <div class="game-map-toolbar d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2">
-        <span class="text-body-secondary small">Игровая карта</span>
         <div class="btn-group btn-group-sm" role="group" aria-label="Масштаб карты">
-          <button type="button" id="map-zoom-in" class="btn btn-outline-secondary" aria-label="Увеличить карту" title="Увеличить карту">+</button>
-          <button type="button" id="map-zoom-out" class="btn btn-outline-secondary" aria-label="Уменьшить карту" title="Уменьшить карту">−</button>
-          <button type="button" id="map-reset" class="btn btn-outline-secondary" title="Показать карту целиком">Сбросить масштаб</button>
+          <button type="button" id="map-zoom-in" class="btn btn-outline-secondary map-toolbar-icon" aria-label="Увеличить карту" title="Увеличить карту">+</button>
+          <button type="button" id="map-reset" class="btn btn-outline-secondary map-toolbar-icon" aria-label="Сбросить масштаб" title="Сбросить масштаб"><span class="map-reset-symbol" aria-hidden="true">○</span></button>
+          <button type="button" id="map-zoom-out" class="btn btn-outline-secondary map-toolbar-icon" aria-label="Уменьшить карту" title="Уменьшить карту">−</button>
         </div>
+        <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2" href="{% url 'records:weekly' %}?waterbody_id={{ waterbody.pk }}">{% include 'includes/records_icon.html' with kind='records' %}<span>Рекорды водоёма</span></a>
       </div>
       <div id="waterbody-map" class="waterbody-map border rounded"
            data-image-url="{{ game_map.image.url }}"

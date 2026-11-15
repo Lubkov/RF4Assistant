@@ -65,3 +65,10 @@ body { background-color: var(--bs-body-bg); }
 
 /* Waterbody access level is secondary to the location name. */
 .waterbody-level { font-size: .55em; }
+
+/* Compact, equally sized map zoom and reset controls. */
+.game-map-toolbar .map-toolbar-icon { min-width: 2.4rem; font-size: 1.15rem; line-height: 1.2; }
+
+/* Use the same records icons in the tabs and waterbody toolbar. */
+.nav-tabs .nav-link:has(.nav-icon) { display: inline-flex; align-items: center; gap: .45rem; }
+.game-map-toolbar .map-reset-symbol { display: inline-block; font-size: .84em; line-height: 1; }

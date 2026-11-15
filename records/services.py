@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
 
-from fish.models import Fish, WaterbodyFish
+from fish.models import Fish
 from waterbodies.models import Waterbody
 from .models import Bait, Catch, Collection, WeeklyCatchRegion
 from .bait_utils import split_baits
@@ -93,17 +93,6 @@ def import_weekly(payload, *, collected_at=None):
         # obtained when that bait appears as bait1 in another record.
         icon_updates = []
         old_catches = {c.fingerprint: c for c in Catch.objects.filter(fingerprint__in=keys)}
-        # Synchronize catalog links for both new and previously imported catches.
-        # The unique constraint ignores already known combinations without SELECTs.
-        pairs = {
-            (catch.waterbody_id, catch.fish_id)
-            for catch in old_catches.values()
-            if catch.waterbody_id is not None and catch.fish_id is not None
-        }
-        WaterbodyFish.objects.bulk_create(
-            [WaterbodyFish(waterbody_id=wb_id, fish_id=fish_id) for wb_id, fish_id in pairs],
-            ignore_conflicts=True,
-        )
         for key, r in distinct.items():
             c = old_catches[key]
             changed = False

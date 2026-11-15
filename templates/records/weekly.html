@@ -60,8 +60,8 @@
 </section>
 
 <nav class="nav nav-tabs mb-3" aria-label="Группировка рекордов">
-  <a class="nav-link{% if selected_view == 'fish' %} active{% endif %}" href="{{ view_urls.fish }}"{% if selected_view == 'fish' %} aria-current="page"{% endif %}>По видам рыб</a>
-  <a class="nav-link{% if selected_view == 'bait' %} active{% endif %}" href="{{ view_urls.bait }}"{% if selected_view == 'bait' %} aria-current="page"{% endif %}>По наживкам</a>
+  <a class="nav-link{% if selected_view == 'fish' %} active{% endif %}" href="{{ view_urls.fish }}"{% if selected_view == 'fish' %} aria-current="page"{% endif %}>{% include 'includes/records_icon.html' with kind='fish' %}<span>По видам рыб</span></a>
+  <a class="nav-link{% if selected_view == 'bait' %} active{% endif %}" href="{{ view_urls.bait }}"{% if selected_view == 'bait' %} aria-current="page"{% endif %}>{% include 'includes/records_icon.html' with kind='bait' %}<span>По наживкам</span></a>
 </nav>
 
 {% for waterbody in data.waterbody_groups %}

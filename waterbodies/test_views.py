@@ -77,6 +77,21 @@ class WaterbodyPagesTests(TestCase):
         self.assertContains(response, "Карта водоёма")
         self.assertContains(response, "Обитатели водоёма")
 
+    def test_map_toolbar_and_waterbody_records_link(self):
+        waterbody = Waterbody.objects.get(pk=1)
+        response = self.client.get(reverse("waterbodies:detail", args=[waterbody.slug]))
+        self.assertContains(response, 'id="map-zoom-in"')
+        self.assertContains(response, 'id="map-reset"')
+        self.assertContains(response, 'id="map-zoom-out"')
+        self.assertContains(response, f'{reverse("records:weekly")}?waterbody_id={waterbody.pk}')
+        self.assertContains(response, "Рекорды водоёма")
+        self.assertContains(response, 'class="map-reset-symbol"')
+        self.assertContains(response, 'd-inline-flex align-items-center gap-2')
+        self.assertNotContains(response, ">Игровая карта<")
+        html = response.content.decode()
+        self.assertLess(html.index('id="map-zoom-in"'), html.index('id="map-reset"'))
+        self.assertLess(html.index('id="map-reset"'), html.index('id="map-zoom-out"'))
+
     def test_detail_with_no_fishes_shows_empty_message(self):
         waterbody = Waterbody.objects.get(pk=1)
         WaterbodyFish.objects.filter(waterbody=waterbody).delete()

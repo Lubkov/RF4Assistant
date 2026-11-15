@@ -1,7 +1,7 @@
 from datetime import date
 from django.test import TestCase
 from django.utils import timezone
-from fish.models import Fish, WaterbodyFish
+from fish.models import Fish
 from waterbodies.models import Waterbody
 from .models import Bait, Collection, Catch, WeeklyCatchRegion
 from .bait_utils import split_baits
@@ -42,31 +42,6 @@ class WeeklyImportTests(TestCase):
         catch = Catch.objects.get()
         self.assertIsNotNone(catch.fish_id)
         self.assertIsNotNone(catch.waterbody_id)
-
-    def test_waterbody_fish_link_created_once(self):
-        payload = self.make_payload()
-        payload["records"][0]["waterbody"] = "р. Сура"
-        fish = Fish.objects.get(name="Вьюн")
-        waterbody = Waterbody.objects.get(name="р. Сура")
-        self.assertFalse(WaterbodyFish.objects.filter(fish=fish, waterbody=waterbody).exists())
-
-        import_weekly(payload)
-        import_weekly(payload)
-        import_weekly({**payload, "source_url": "https://rf4game.ru/records/weekly/region/GL/"})
-        self.assertEqual(WaterbodyFish.objects.filter(fish=fish, waterbody=waterbody).count(), 1)
-
-    def test_existing_waterbody_fish_link_is_preserved(self):
-        payload = self.make_payload()
-        payload["records"][0]["waterbody"] = "р. Сура"
-        fish = Fish.objects.get(name="Вьюн")
-        waterbody = Waterbody.objects.get(name="р. Сура")
-        link = WaterbodyFish.objects.create(fish=fish, waterbody=waterbody)
-        import_weekly(payload)
-        self.assertEqual(WaterbodyFish.objects.get(fish=fish, waterbody=waterbody).pk, link.pk)
-
-    def test_unmatched_waterbody_does_not_create_link(self):
-        import_weekly(self.make_payload())
-        self.assertEqual(WaterbodyFish.objects.count(), 0)
 
 
 class BaitCatalogTests(TestCase):

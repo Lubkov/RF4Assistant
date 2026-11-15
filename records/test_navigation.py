@@ -23,4 +23,8 @@ class RecordsNavigationTests(TestCase):
                 self.assertContains(response, 'По видам рыб')
                 self.assertContains(response, 'По наживкам')
                 self.assertContains(response, 'heading-icon')
+                self.assertContains(response, 'M8 21h8m-4-4v4')
+                self.assertContains(response, 'nav nav-tabs mb-3')
+                self.assertContains(response, "with kind='fish'" if False else 'M3 7h4m-4 5h4m-4 5h4')
+                self.assertContains(response, 'M4 5h9M4 10h7M4 15h5')
                 self.assertContains(response, f'href="/records/?view={view}"')
