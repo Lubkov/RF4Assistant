@@ -4,7 +4,7 @@
 {% block extra_css %}<link rel="stylesheet" href="{% versioned_static 'css/records.css' %}">{% endblock %}
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-  <h1 class="h3 mb-0">Статистика недельных рекордов</h1>
+  <h1 class="h3 mb-0 d-inline-flex align-items-center gap-2">{% include 'includes/records_icon.html' with kind='records' icon_class='heading-icon' %}<span>Статистика недельных рекордов</span></h1>
   <div class="dropdown records-region-control">
     <input type="hidden" name="region" id="region" form="records-filter-form" value="{{ selected_region }}">
     <button type="button" class="btn btn-outline-secondary dropdown-toggle records-region-trigger"
@@ -60,7 +60,7 @@
 </section>
 
 <nav class="nav nav-tabs mb-3" aria-label="Группировка рекордов">
-  <a class="nav-link{% if selected_view == 'fish' %} active{% endif %}" href="{{ view_urls.fish }}"{% if selected_view == 'fish' %} aria-current="page"{% endif %}>По рыбам</a>
+  <a class="nav-link{% if selected_view == 'fish' %} active{% endif %}" href="{{ view_urls.fish }}"{% if selected_view == 'fish' %} aria-current="page"{% endif %}>По видам рыб</a>
   <a class="nav-link{% if selected_view == 'bait' %} active{% endif %}" href="{{ view_urls.bait }}"{% if selected_view == 'bait' %} aria-current="page"{% endif %}>По наживкам</a>
 </nav>
 

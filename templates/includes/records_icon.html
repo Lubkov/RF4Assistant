@@ -1,0 +1,16 @@
+{# Shared monochrome icons for the records menu and report heading. #}
+<svg class="{{ icon_class|default:'nav-icon' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  {% if kind == 'fish' %}
+    <path d="M3 7h4m-4 5h4m-4 5h4"/>
+    <path d="M10 7h10M10 12h8M10 17h6"/>
+    <path d="m6 5 3 2-3 2m0 1 3 2-3 2m0 1 3 2-3 2"/>
+  {% elif kind == 'bait' %}
+    <path d="M4 5h9M4 10h7M4 15h5"/>
+    <path d="M16 3v10a4 4 0 1 0 4 4"/>
+    <path d="m13 10 3 3 3-3"/>
+  {% else %}
+    <path d="M5 4h14v16H5z"/>
+    <path d="M9 4v4a3 3 0 0 0 6 0V4"/>
+    <path d="M9 13h6m-6 4h6"/>
+  {% endif %}
+</svg>

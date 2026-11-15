@@ -3,7 +3,25 @@
 body { background-color: var(--bs-body-bg); }
 .site-header, .site-footer { background: var(--bs-tertiary-bg); }
 .navbar-brand { letter-spacing: -.02em; }
-.map-dropdown { max-height: min(65vh, 430px); overflow-y: auto; }
+/* Fill the first nine map links top-to-bottom, then the next nine in column two. */
+.map-dropdown {
+  display: none;
+  width: 520px;
+  max-width: calc(100vw - 1.5rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(9, auto);
+  grid-auto-flow: column;
+  max-height: none;
+  overflow: visible;
+}
+.map-dropdown.show { display: grid; }
+.map-dropdown > li { min-width: 0; }
+.map-dropdown .dropdown-item { display: flex; align-items: baseline; flex-wrap: nowrap; gap: .35rem; width: 100%; white-space: normal; }
+.map-dropdown .dropdown-item > span { min-width: 0; flex: 1 1 auto; }
+.map-dropdown-level { margin-left: auto; flex-shrink: 0; font-size: .75em; white-space: nowrap; text-align: right; }
+@media (max-width: 575.98px) {
+  .map-dropdown, .map-dropdown.show { width: 100%; grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
+}
 .waterbody-card { border-color: var(--bs-border-color); transition: border-color .15s ease, transform .15s ease; scroll-margin-top: 1.5rem; }
 .waterbody-card:hover { border-color: var(--bs-secondary-color); }
 .waterbody-card:target { outline: 2px solid var(--bs-primary); outline-offset: 3px; }

@@ -28,3 +28,17 @@ class HomePageTests(TestCase):
         Waterbody.objects.create(name='С картинкой', slug='with-image', level=1, image='waterbodies/test.webp')
         response = self.client.get(reverse('core:home'))
         self.assertContains(response, '/media/waterbodies/test.webp')
+
+
+class MapDropdownTests(TestCase):
+    def test_waterbody_menu_shows_access_levels(self):
+        Waterbody.objects.create(name='Тестовое озеро', slug='test-lake', level=7)
+        response = self.client.get(reverse('core:home'))
+        self.assertContains(response, '<small class="map-dropdown-level text-body-secondary">7 ур.</small>', html=False)
+        self.assertContains(response, 'Тестовое озеро')
+
+    def test_map_menu_uses_column_first_grid(self):
+        from django.conf import settings
+        css = (settings.BASE_DIR / 'static/css/site.css').read_text(encoding='utf-8')
+        self.assertIn('grid-template-rows: repeat(9, auto)', css)
+        self.assertIn('grid-auto-flow: column', css)
