@@ -21,6 +21,14 @@
   for (const select of form.querySelectorAll("select")) {
     select.addEventListener("change", submit);
   }
+  const regionInput = document.getElementById("region");
+  for (const option of document.querySelectorAll("[data-record-region]")) {
+    option.addEventListener("click", () => {
+      if (!regionInput || regionInput.value === option.dataset.recordRegion) return;
+      regionInput.value = option.dataset.recordRegion;
+      submit();
+    });
+  }
 })();
 
 
@@ -49,7 +57,7 @@
     details.classList.toggle("records-baits-fit", fits);
     const toggle = details.querySelector(".records-bait-toggle");
     if (toggle) toggle.setAttribute("aria-hidden", String(fits));
-    summary.setAttribute("aria-label", fits ? "Все элементы помещаются в строке" : "Развернуть список");
+    summary.setAttribute("aria-label", fits ? "Все элементы помещаются в строке" : details.dataset.expandLabel);
     summary.tabIndex = fits ? -1 : 0;
     if (fits) return;
 
@@ -69,15 +77,87 @@
     }
   };
 
-  // Keep the native details/summary interaction for keyboard and touch.
+  // Native <details> cannot animate the removal of its content on close.
+  // Keep it open until the collapse animation finishes, then close it.
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const animations = new WeakMap();
+  const desiredStates = new WeakMap();
   for (const details of detailsNodes) {
     const summary = details.querySelector(".records-baits-summary");
-    summary?.addEventListener("click", (event) => {
-      if (details.classList.contains("records-baits-fit")) event.preventDefault();
-    });
-    details.addEventListener("toggle", () => {
-      if (!details.open) requestAnimationFrame(() => measure(details));
-      else summary?.setAttribute("aria-label", "Свернуть список");
+    const panel = details.querySelector(".records-bait-list-expanded");
+    if (!summary || !panel) continue;
+    const chevron = summary.querySelector(".records-bait-toggle .records-chevron");
+    const updateChevron = (expanded) => {
+      if (chevron) chevron.textContent = expanded ? "⌃" : "⌄";
+    };
+    updateChevron(details.open);
+
+    // Treat the empty area of the last column as a disclosure target too.
+    // Preserve normal interaction with chips and any interactive descendants.
+    const cell = details.closest(".records-baits-cell");
+    if (cell) {
+      cell.addEventListener("click", (event) => {
+        if (event.target.closest(".records-baits-summary")) return;
+        if (event.target.closest(".records-bait-item, a, button, input, select, textarea")) return;
+        if (details.classList.contains("records-baits-fit")) return;
+        summary.click();
+      });
+    }
+
+    summary.addEventListener("click", (event) => {
+      // Chips sit inside <summary> when collapsed. Prevent the native
+      // <details> toggle without treating a chip click as a disclosure.
+      if (event.target.closest(".records-bait-item")) {
+        event.preventDefault();
+        return;
+      }
+      event.preventDefault(); // We control `open` so collapse can finish first.
+      if (details.classList.contains("records-baits-fit")) return;
+
+      const currentTarget = desiredStates.has(details)
+        ? desiredStates.get(details) : details.open;
+      const opening = !currentTarget;
+      desiredStates.set(details, opening);
+      updateChevron(opening);
+
+      const previous = animations.get(details);
+      const from = previous ? panel.getBoundingClientRect().height
+        : (details.open ? panel.getBoundingClientRect().height : 0);
+      if (previous) previous.cancel();
+      if (opening) details.open = true;
+
+      summary.setAttribute("aria-label", opening
+        ? details.dataset.collapseLabel : details.dataset.expandLabel);
+      details.classList.toggle("records-baits-closing", !opening);
+
+      if (reduceMotion.matches || typeof panel.animate !== "function") {
+        details.open = opening;
+        details.classList.remove("records-baits-closing");
+        panel.style.removeProperty("height");
+        panel.style.removeProperty("overflow");
+        desiredStates.delete(details);
+        if (!opening) requestAnimationFrame(() => measure(details));
+        return;
+      }
+
+      panel.style.height = `${from}px`;
+      panel.style.overflow = "hidden";
+      const to = opening ? panel.scrollHeight : 0;
+      const animation = panel.animate([
+        { height: `${from}px`, opacity: opening ? 0 : 1 },
+        { height: `${to}px`, opacity: opening ? 1 : 0 },
+      ], { duration: 220, easing: "ease-in-out" });
+      animations.set(details, animation);
+      animation.onfinish = () => {
+        if (animations.get(details) !== animation) return;
+        animations.delete(details);
+        desiredStates.delete(details);
+        details.open = opening;
+        details.classList.remove("records-baits-closing");
+        panel.style.removeProperty("height");
+        panel.style.removeProperty("overflow");
+        if (!opening) requestAnimationFrame(() => measure(details));
+      };
     });
   }
 

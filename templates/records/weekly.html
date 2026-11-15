@@ -3,11 +3,22 @@
 {% block title %}Статистика рекордов — RF4 Assistant{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% versioned_static 'css/records.css' %}">{% endblock %}
 {% block content %}
-<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
-  <div>
-    <h1 class="h3 mb-2">Статистика недельных рекордов</h1>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+  <h1 class="h3 mb-0">Статистика недельных рекордов</h1>
+  <div class="dropdown records-region-control">
+    <input type="hidden" name="region" id="region" form="records-filter-form" value="{{ selected_region }}">
+    <button type="button" class="btn btn-outline-secondary dropdown-toggle records-region-trigger"
+            id="records-region-trigger" data-bs-toggle="dropdown" aria-expanded="false"
+            aria-label="Регион: {{ selected_region }}">{{ selected_region }}</button>
+    <ul class="dropdown-menu dropdown-menu-end records-region-menu" aria-labelledby="records-region-trigger">
+      <li><button type="button" class="dropdown-item{% if selected_region == 'ALL' %} active{% endif %}"
+                  data-record-region="ALL"{% if selected_region == 'ALL' %} aria-current="true"{% endif %}>ALL - Все регионы</button></li>
+      {% for code, name in regions.items %}
+      <li><button type="button" class="dropdown-item{% if selected_region == code %} active{% endif %}"
+                  data-record-region="{{ code }}"{% if selected_region == code %} aria-current="true"{% endif %}>{{ code }} — {{ name }}</button></li>
+      {% endfor %}
+    </ul>
   </div>
-  <span class="badge text-bg-secondary fw-normal align-self-center">{{ data.date_from }} — {{ data.date_to }}</span>
 </div>
 
 <section class="card mb-4" aria-label="Фильтры статистики">
@@ -21,30 +32,24 @@
           <button type="button" class="btn btn-sm {% if selected_days == 2 %}btn-primary active{% else %}btn-outline-primary{% endif %}" data-record-days="2" aria-pressed="{% if selected_days == 2 %}true{% else %}false{% endif %}">2 дня</button>
           <button type="button" class="btn btn-sm {% if selected_days == 3 %}btn-primary active{% else %}btn-outline-primary{% endif %}" data-record-days="3" aria-pressed="{% if selected_days == 3 %}true{% else %}false{% endif %}">3 дня</button>
           <button type="button" class="btn btn-sm {% if selected_days == 7 %}btn-primary active{% else %}btn-outline-primary{% endif %}" data-record-days="7" aria-pressed="{% if selected_days == 7 %}true{% else %}false{% endif %}">7 дней</button>
+          <span class="badge text-bg-secondary fw-normal ms-auto records-period-range">{{ data.date_from }} — {{ data.date_to }}</span>
         </div>
         <input type="hidden" id="records_days" name="days" value="{{ selected_days }}">
       </div>
-      <div class="col-6 col-lg-2">
-        <label class="form-label" for="region">Регион</label>
-        <select id="region" name="region" class="form-select">
-          <option value="ALL"{% if selected_region == "ALL" %} selected{% endif %}>Все регионы</option>
-          {% for code, name in regions.items %}<option value="{{ code }}"{% if selected_region == code %} selected{% endif %}>{{ code }} — {{ name }}</option>{% endfor %}
-        </select>
-      </div>
-      <div class="col-6 col-lg-3">
+      <div class="col-6 col-lg-4">
         <label class="form-label" for="waterbody">Водоём</label>
         <select id="waterbody" name="waterbody_id" class="form-select">
           {% for wb in waterbodies %}<option value="{{ wb.id }}"{% if wb.id == selected_waterbody %} selected{% endif %}>{{ wb.name }}</option>{% endfor %}
         </select>
       </div>
-      <div class="col-6 col-lg-3">
-        <label class="form-label" for="fish">Рыба</label>
+      <div class="col-6 col-lg-4">
+        <label class="form-label" for="fish">Вид рыбы</label>
         <select id="fish" name="fish_id" class="form-select">
           <option value="">Все виды</option>
           {% for f in fishes %}<option value="{{ f.id }}"{% if f.id == selected_fish %} selected{% endif %}>{{ f.name }}</option>{% endfor %}
         </select>
       </div>
-      <div class="col-8 col-lg-4">
+      <div class="col-12 col-lg-4">
         <label class="form-label" for="sort">Сортировать {% if selected_view == "bait" %}наживки{% else %}рыбу{% endif %} по</label>
         <select id="sort" name="sort" class="form-select">
           {% for code, name in sort_options %}<option value="{{ code }}"{% if data.sort == code %} selected{% endif %}>{{ name }}</option>{% endfor %}
@@ -73,8 +78,8 @@
     <table class="table table-hover align-middle records-table mb-0">
       <thead><tr>
         <th scope="col">{% if selected_view == "bait" %}Наживка{% else %}Рыба{% endif %}</th>
-        <th scope="col" class="text-end">Макс. вес</th>
         <th scope="col" class="text-center records-count-column">Кол-во рекордов</th>
+        <th scope="col" class="text-end">Макс. вес</th>
         <th scope="col">{% if selected_view == "bait" %}Виды рыб{% else %}Наживки{% endif %}</th>
       </tr></thead>
       <tbody>
@@ -89,11 +94,11 @@
               <span class="fw-medium">{{ row.bait }}</span>
             </div>
           </td>
-          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
+          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
           <td class="records-baits-cell">
             {% if row.fish_details|length > 1 %}
-            <details class="records-baits-details" data-record-expand>
+            <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">
               <summary class="records-baits-summary" aria-label="Виды рыб для {{ row.bait }}: развернуть или свернуть">
                 <span class="records-bait-preview" aria-hidden="true">
                   {% for fish in row.fish_details %}
@@ -103,9 +108,9 @@
                   </span>
                   {% endfor %}
                 </span>
-                <span class="records-bait-toggle records-bait-item text-nowrap">
-                  <span class="records-bait-show">Показать ({{ row.fish_details|length }}) <span class="records-toggle-chevron" aria-hidden="true">⌄</span></span>
-                  <span class="records-bait-hide">Свернуть <span class="records-toggle-chevron" aria-hidden="true">⌃</span></span>
+                <span class="records-bait-toggle text-body-secondary small text-nowrap">
+                  <span>{{ row.fish_details|length }} видов рыб</span>
+                  <span class="records-chevron" aria-hidden="true">⌄</span>
                 </span>
               </summary>
               <div class="records-bait-list records-bait-list-expanded">
@@ -138,11 +143,11 @@
               <span class="fw-medium">{{ row.fish }}</span>
             </div>
           </td>
-          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
+          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
           <td class="records-baits-cell">
             {% if row.bait_details|length > 1 %}
-            <details class="records-baits-details" data-record-expand>
+            <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">
               <summary class="records-baits-summary" aria-label="Наживки для {{ row.fish }}: развернуть или свернуть полный список">
                 <span class="records-bait-preview" aria-hidden="true">
                   {% for bait in row.bait_details %}
@@ -153,9 +158,9 @@
                   </span>
                   {% endfor %}
                 </span>
-                <span class="records-bait-toggle records-bait-item text-nowrap">
-                  <span class="records-bait-show">Показать ({{ row.bait_details|length }}) <span class="records-toggle-chevron" aria-hidden="true">⌄</span></span>
-                  <span class="records-bait-hide">Свернуть <span class="records-toggle-chevron" aria-hidden="true">⌃</span></span>
+                <span class="records-bait-toggle text-body-secondary small text-nowrap">
+                  <span>{{ row.bait_details|length }} наживок</span>
+                  <span class="records-chevron" aria-hidden="true">⌄</span>
                 </span>
               </summary>
               <div class="records-bait-list records-bait-list-expanded">
