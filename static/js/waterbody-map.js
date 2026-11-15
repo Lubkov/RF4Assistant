@@ -1,6 +1,4 @@
-/* RF4 map viewer. Coordinates are image pixel units in CRS.Simple.
- * Future markers can use relative x/y (0..1) and be converted with
- * L.latLng(y * imageHeight, x * imageWidth). */
+/* Leaflet CRS.Simple image viewer. Compass coordinates require per-image calibration. */
 (function () {
   "use strict";
 
@@ -45,6 +43,32 @@
       });
       L.imageOverlay(imageUrl, bounds, { alt: container.dataset.imageAlt || "Карта водоёма" }).addTo(map);
 
+      // RF4 X increases left-to-right; Y increases bottom-to-top.
+      // All four values correspond to the outer edges of the entire image.
+      const fields = ["gameXMin", "gameXMax", "gameYMin", "gameYMax"];
+      const c = Object.fromEntries(fields.map(key => [key, Number(container.dataset[key])]));
+      const calibrated = fields.every(key => container.dataset[key] !== undefined && Number.isFinite(c[key])) &&
+        c.gameXMin < c.gameXMax && c.gameYMin < c.gameYMax;
+      if (calibrated) {
+        const hint = L.tooltip({
+          permanent: true, interactive: false, direction: "top",
+          offset: [0, -12], className: "map-coordinate-hint",
+        });
+        map.on("mousemove", function (event) {
+          const imageX = event.latlng.lng / width;
+          const imageY = event.latlng.lat / height; // distance from image bottom
+          if (imageX < 0 || imageX > 1 || imageY < 0 || imageY > 1) {
+            map.removeLayer(hint);
+            return;
+          }
+          const x = c.gameXMin + imageX * (c.gameXMax - c.gameXMin);
+          const y = c.gameYMin + imageY * (c.gameYMax - c.gameYMin);
+          hint.setLatLng(event.latlng).setContent(`${Math.round(x)}:${Math.round(y)}`);
+          if (!map.hasLayer(hint)) hint.addTo(map);
+        });
+        container.addEventListener("mouseleave", function () { map.removeLayer(hint); });
+      }
+
       // A fully visible image must stay fixed. Once either image dimension
       // exceeds the viewport, panning is allowed so hidden parts remain reachable.
       function updateDragging() {
@@ -84,7 +108,7 @@
         else map.invalidateSize();
         updateDragging();
       });
-      showStatus("Колёсико мыши или кнопки +/− — масштаб.");
+      showStatus(calibrated ? "Колёсико мыши или кнопки +/− — масштаб. Под курсором — игровые X:Y (по настроенной привязке)." : "Колёсико мыши или кнопки +/− — масштаб. Для игровых координат задайте границы карты в Django Admin.");
     };
     image.onerror = function () { showStatus("Не удалось загрузить изображение карты."); };
     image.src = imageUrl;

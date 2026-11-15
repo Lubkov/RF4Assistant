@@ -52,10 +52,16 @@ body { background-color: var(--bs-body-bg); }
 .waterbody-card-link { display: block; height: 100%; }
 .waterbody-card-link:focus-visible { outline: 3px solid var(--bs-primary); outline-offset: -3px; }
 .waterbody-card-link:hover .card-title { text-decoration: underline; }
-.game-map-container { max-width: 800px; margin-inline: auto; }
+.game-map-container { max-width: 800px; margin-inline: 0; }
 .waterbody-map { width: 100%; aspect-ratio: 1 / 1; background: var(--bs-body-bg); overflow: hidden; }
 .waterbody-map .leaflet-image-layer { image-rendering: auto; }
 .waterbody-map.leaflet-container { background: var(--bs-body-bg); }
+.waterbody-map .leaflet-tooltip.map-coordinate-hint {
+  pointer-events: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
 
 /* Waterbody access level is secondary to the location name. */
 .waterbody-level { font-size: .55em; }

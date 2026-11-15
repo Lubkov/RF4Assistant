@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load versioned_static %}
+{% load versioned_static l10n %}
 {% block title %}{{ waterbody.name }} — RF4 Assistant{% endblock %}
 {% block extra_css %}
   {% if game_map %}<link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">{% endif %}
@@ -15,6 +15,18 @@
   <h1 id="waterbody-title" class="h2 fw-semibold mb-4 d-flex align-items-baseline flex-wrap gap-3">
     <span>{{ waterbody.name }}</span><small class="waterbody-level text-body-secondary fw-normal">{{ waterbody.level }} ур.</small>
   </h1>
+  <ul class="nav nav-tabs mb-3" id="waterbody-tabs" role="tablist" aria-label="Разделы водоёма">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="waterbody-map-tab" data-bs-toggle="tab" data-bs-target="#waterbody-map-pane"
+              type="button" role="tab" aria-controls="waterbody-map-pane" aria-selected="true">Карта водоёма</button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="waterbody-fishes-tab" data-bs-toggle="tab" data-bs-target="#waterbody-fishes-pane"
+              type="button" role="tab" aria-controls="waterbody-fishes-pane" aria-selected="false">Обитатели водоёма</button>
+    </li>
+  </ul>
+  <div class="tab-content" id="waterbody-tab-content">
+    <section class="tab-pane fade show active" id="waterbody-map-pane" role="tabpanel" aria-labelledby="waterbody-map-tab" tabindex="0">
   {% if game_map and game_map.image %}
     <div class="game-map-container">
       <div class="game-map-toolbar d-flex justify-content-between align-items-center gap-2 flex-wrap mb-2">
@@ -26,9 +38,12 @@
         </div>
       </div>
       <div id="waterbody-map" class="waterbody-map border rounded"
-           data-image-url="{{ game_map.image.url }}" data-image-alt="Карта: {{ waterbody.name }}"
+           data-image-url="{{ game_map.image.url }}"
+           {% if game_map.has_game_coordinates %}data-game-x-min="{{ game_map.game_x_min|unlocalize }}" data-game-x-max="{{ game_map.game_x_max|unlocalize }}"
+           data-game-y-min="{{ game_map.game_y_min|unlocalize }}" data-game-y-max="{{ game_map.game_y_max|unlocalize }}"{% endif %}
+           data-image-alt="Карта: {{ waterbody.name }}"
            aria-label="Интерактивная карта водоёма {{ waterbody.name }}"></div>
-      <p class="text-body-secondary small mt-2 mb-0" id="map-status" role="status">Колёсико мыши или кнопки +/− — масштаб.</p>
+      <p class="text-body-secondary small mt-2 mb-0" id="map-status" role="status">Колёсико мыши или кнопки +/− — масштаб. {% if game_map.has_game_coordinates %}При наведении показываются игровые координаты X:Y.{% else %}Для отображения игровых координат настройте привязку карты в Django Admin.{% endif %}</p>
       <noscript><p>Для интерактивного просмотра нужен JavaScript.</p><img class="img-fluid" src="{{ game_map.image.url }}" alt="Карта: {{ waterbody.name }}"></noscript>
       {% if game_map.source_url %}
         <p class="small mt-2 mb-0 text-body-secondary">Источник: <a href="{{ game_map.source_url }}" target="_blank" rel="noopener noreferrer">страница изображения</a></p>
@@ -37,9 +52,61 @@
   {% else %}
     <div class="alert alert-secondary" role="status">Карта этого водоёма пока не загружена.</div>
   {% endif %}
+    </section>
+    <section class="tab-pane fade" id="waterbody-fishes-pane" role="tabpanel" aria-labelledby="waterbody-fishes-tab" tabindex="0">
+  <div class="d-flex align-items-baseline flex-wrap gap-3 mb-3">
+    <h2 id="waterbody-fishes-title" class="h4 mb-0">Виды рыб</h2>
+    <span class="text-body-secondary small">Видов: {{ fishes|length }}</span>
+  </div>
+  {% if fishes %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle fish-table">
+        <thead>
+          <tr>
+            <th scope="col">Название</th>
+            <th scope="col" class="text-end">Вес трофея</th>
+            <th scope="col" class="text-end">Вес редкого трофея</th>
+            <th scope="col" class="fish-rarity-column text-start">Редкость</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for fish in fishes %}
+            <tr>
+              <td class="fw-medium">
+                <span class="d-inline-flex align-items-center gap-2">
+                  {% if fish.image %}
+                    <img class="fish-list-icon" src="{{ fish.image.url }}" alt="" loading="lazy" width="36" height="36">
+                  {% else %}
+                    <span class="fish-list-icon fish-list-icon-placeholder" aria-hidden="true">🐟</span>
+                  {% endif %}
+                  <span>{{ fish.name }}</span>
+                </span>
+              </td>
+              <td class="text-end text-nowrap fish-weight" data-grams="{{ fish.trophy_weight }}">{{ fish.trophy_weight }} г</td>
+              <td class="text-end text-nowrap fish-weight"{% if fish.super_trophy_weight is not None %} data-grams="{{ fish.super_trophy_weight }}"{% endif %}>{% if fish.super_trophy_weight is not None %}{{ fish.super_trophy_weight }} г{% else %}—{% endif %}</td>
+              <td class="text-nowrap text-start fish-rarity-column">
+                {% if fish.rarity == 1 %}
+                  <img class="rarity-icon" src="{% versioned_static 'images/rarity-1.svg' %}" alt="" aria-hidden="true">Обычный вид
+                {% elif fish.rarity == 2 %}
+                  <img class="rarity-icon" src="{% versioned_static 'images/rarity-2.svg' %}" alt="" aria-hidden="true">Редкий вид
+                {% elif fish.rarity == 3 %}
+                  <img class="rarity-icon" src="{% versioned_static 'images/rarity-3.svg' %}" alt="" aria-hidden="true">Редчайший вид
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p class="text-body-secondary">Для этого водоёма виды рыб пока не указаны.</p>
+  {% endif %}
+    </section>
+  </div>
 </section>
 {% endblock %}
 {% block extra_js %}
+  <script src="{% versioned_static 'js/fish-weights.js' %}" defer></script>
   {% if game_map and game_map.image %}
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" defer></script>
     <script src="{% versioned_static 'js/waterbody-map.js' %}" defer></script>

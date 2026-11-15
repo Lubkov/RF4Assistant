@@ -33,6 +33,19 @@ class WaterbodyMap(models.Model):
         "Игровая карта", upload_to=waterbody_map_path,
     )
     source_url = models.URLField("Источник изображения", blank=True)
+    # Compass coordinates at the edges of the entire map image.
+    game_x_min = models.FloatField("Игровая координата X слева", null=True, blank=True)
+    game_x_max = models.FloatField("Игровая координата X справа", null=True, blank=True)
+    game_y_min = models.FloatField("Игровая координата Y снизу", null=True, blank=True)
+    game_y_max = models.FloatField("Игровая координата Y сверху", null=True, blank=True)
+
+    @property
+    def has_game_coordinates(self):
+        values = (self.game_x_min, self.game_x_max, self.game_y_min, self.game_y_max)
+        return (all(value is not None for value in values)
+                and self.game_x_min < self.game_x_max
+                and self.game_y_min < self.game_y_max)
+
 
     class Meta:
         verbose_name = "Карта водоёма"

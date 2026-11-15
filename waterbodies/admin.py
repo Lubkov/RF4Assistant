@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django import forms
 from django.utils.html import format_html
 
 from fish.models import WaterbodyFish
@@ -15,22 +16,46 @@ class WaterbodyFishInline(admin.TabularInline):
     verbose_name_plural = "Рыбы водоёма"
 
 
+class WaterbodyMapForm(forms.ModelForm):
+    class Meta:
+        model = WaterbodyMap
+        fields = "__all__"
+
+    def clean(self):
+        data = super().clean()
+        names = ("game_x_min", "game_x_max", "game_y_min", "game_y_max")
+        values = [data.get(name) for name in names]
+        if any(value is not None for value in values) and not all(value is not None for value in values):
+            raise forms.ValidationError("Укажите все четыре границы игровых координат.")
+        if all(value is not None for value in values):
+            if data["game_x_min"] >= data["game_x_max"] or data["game_y_min"] >= data["game_y_max"]:
+                raise forms.ValidationError("Минимальная координата должна быть меньше максимальной.")
+        return data
+
+
+MAP_CALIBRATION_FIELDS = (
+    "game_x_min", "game_x_max", "game_y_min", "game_y_max",
+)
+
+
 class WaterbodyMapInline(admin.StackedInline):
+    form = WaterbodyMapForm
     model = WaterbodyMap
     extra = 1
     max_num = 1
-    fields = ("image", "source_url")
+    fields = ("image", "source_url", MAP_CALIBRATION_FIELDS)
     verbose_name = "Игровая карта"
     verbose_name_plural = "Игровая карта"
 
 
 @admin.register(WaterbodyMap)
 class WaterbodyMapAdmin(admin.ModelAdmin):
+    form = WaterbodyMapForm
     list_display = ("waterbody", "source_url")
     search_fields = ("waterbody__name",)
     autocomplete_fields = ("waterbody",)
     readonly_fields = ("map_preview",)
-    fields = ("waterbody", "image", "source_url", "map_preview")
+    fields = ("waterbody", "image", "source_url", MAP_CALIBRATION_FIELDS, "map_preview")
 
     @admin.display(description="Предпросмотр карты")
     def map_preview(self, obj):
