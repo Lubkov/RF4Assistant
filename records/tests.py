@@ -103,3 +103,56 @@ class WeeklyReportPageTests(TestCase):
             'date_from': '2026-11-11', 'date_to': '2026-11-11', 'sort': 'invalid',
         })
         self.assertEqual(response.status_code, 400)
+
+class WaterbodyFishFilterTests(TestCase):
+    """Species choices follow waterbody; fish never changes waterbody."""
+
+    @classmethod
+    def setUpTestData(cls):
+        from fish.models import WaterbodyFish
+
+        cls.pond_a = Waterbody.objects.create(
+            name="Тестовый водоём A", slug="records-test-a", level=1
+        )
+        cls.pond_b = Waterbody.objects.create(
+            name="Тестовый водоём B", slug="records-test-b", level=1
+        )
+        cls.fish_a = Fish.objects.create(
+            name="Тестовая рыба A", trophy_weight=1000
+        )
+        cls.fish_b = Fish.objects.create(
+            name="Тестовая рыба B", trophy_weight=1000
+        )
+        WaterbodyFish.objects.create(waterbody=cls.pond_a, fish=cls.fish_a)
+        WaterbodyFish.objects.create(waterbody=cls.pond_b, fish=cls.fish_b)
+
+    def test_species_options_depend_on_waterbody(self):
+        for pond, present, absent in (
+            (self.pond_a, self.fish_a, self.fish_b),
+            (self.pond_b, self.fish_b, self.fish_a),
+        ):
+            with self.subTest(pond=pond.id):
+                response = self.client.get('/records/', {'waterbody_id': pond.pk})
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(present, response.context['fishes'])
+                self.assertNotIn(absent, response.context['fishes'])
+                self.assertContains(response, '<option value="">Все виды</option>', html=False)
+
+    def test_incompatible_species_is_reset(self):
+        response = self.client.get('/records/', {
+            'waterbody_id': self.pond_b.pk,
+            'fish_id': self.fish_a.pk,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['selected_fish'])
+        self.assertNotIn('fish_id=', response.context['view_urls']['fish'])
+        self.assertNotIn('fish_id=', response.context['view_urls']['bait'])
+
+    def test_compatible_species_is_preserved(self):
+        response = self.client.get('/records/', {
+            'waterbody_id': self.pond_a.pk,
+            'fish_id': self.fish_a.pk,
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['selected_fish'], self.fish_a.pk)
+        self.assertEqual(response.context['selected_waterbody'], self.pond_a.pk)

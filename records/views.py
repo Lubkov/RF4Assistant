@@ -40,6 +40,13 @@ def weekly_report(request):
         else:
             wb = first_waterbody
         fish = int(request.GET["fish_id"]) if request.GET.get("fish_id") else None
+        # Filter species in one direction only: waterbody -> fish.
+        # The WaterbodyFish catalog is populated from record imports and admin.
+        fishes = Fish.objects.filter(
+            waterbody_fish__waterbody_id=wb
+        ).order_by("name")
+        if fish is not None and not fishes.filter(pk=fish).exists():
+            fish = None
         data = (bait_report if view == "bait" else report)(
             date_from=start, date_to=end,
             waterbody_id=wb, fish_id=fish, region=region, sort=sort,
@@ -47,6 +54,9 @@ def weekly_report(request):
     except (ValueError, OverflowError) as exc:
         return HttpResponseBadRequest(f"Некорректные параметры отчёта: {exc}")
     query = request.GET.copy()
+    # Do not carry an invalid species over when switching between report tabs.
+    if fish is None:
+        query.pop("fish_id", None)
     tabs = {}
     for tab in ("fish", "bait"):
         query["view"] = tab
@@ -59,7 +69,7 @@ def weekly_report(request):
         "data": data,
         "waterbodies": waterbodies,
         "selected_days": days,
-        "fishes": Fish.objects.order_by("name"),
+        "fishes": fishes,
         "selected_waterbody": wb,
         "selected_fish": fish,
         "regions": REGION_NAMES,
