@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="64" height="64" role="img" aria-labelledby="title">
+  <title id="title">Добавить место ловли</title>
+  <circle cx="128" cy="128" r="112" fill="#267CB5"/>
+  <path fill="#FFFFFF" d="M128 49c-33.689 0-61 27.311-61 61 0 43.321 49.321 82.418 57.61 96.31 1.496 2.508 5.285 2.508 6.78 0C139.679 192.418 189 153.321 189 110c0-33.689-27.311-61-61-61Z"/>
+  <circle cx="128" cy="104" r="33" fill="#FFFFFF" stroke="#267CB5" stroke-width="8"/>
+</svg>

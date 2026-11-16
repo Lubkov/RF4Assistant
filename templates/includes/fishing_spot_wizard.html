@@ -1,0 +1,51 @@
+{% load versioned_static %}
+<button type="button" id="spot-open" class="spot-fab" aria-label="Добавить место ловли" data-bs-toggle="modal" data-bs-target="#spot-modal"><img class="spot-fab-icon" src="{% versioned_static 'icons/add-fishing-spot.svg' %}" alt="" aria-hidden="true" width="58" height="58"><span class="spot-fab-label" aria-hidden="true">Добавить место ловли</span></button>
+<div class="modal fade" id="spot-modal" tabindex="-1" aria-labelledby="spot-modal-title" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h2 class="modal-title h5" id="spot-modal-title">Новое место ловли</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button></div>
+      <div class="modal-body">
+        <div class="spot-progress d-grid mb-3" id="spot-progress" role="progressbar" aria-label="Этап заполнения" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        <div class="d-flex justify-content-between align-items-center mb-3 gap-2"><h3 class="h5 mb-0" id="spot-step-title">Категория</h3><small class="text-body-secondary" id="spot-counter">Шаг 1 из 6</small></div>
+        <div class="alert alert-danger d-none" id="spot-error" role="alert"></div>
+        <section class="spot-step" data-step="0" aria-label="Категория"><p class="text-body-secondary small">Выберите одну или две категории.</p><div class="d-grid gap-3 spot-category-list" id="spot-categories">
+          <div><label class="spot-choice form-check"><input class="form-check-input" type="checkbox" value="farm"><span class="form-check-label">Фарм</span></label></div>
+          <div><label class="spot-choice form-check"><input class="form-check-input" type="checkbox" value="trophy"><span class="form-check-label">Трофей</span></label></div>
+          <div><label class="spot-choice form-check"><input class="form-check-input" type="checkbox" value="qualification"><span class="form-check-label">Квалификация</span></label></div>
+          <div><label class="spot-choice form-check"><input class="form-check-input" type="checkbox" value="task"><span class="form-check-label">Задание</span></label></div>
+        </div></section>
+        <section class="spot-step d-none" data-step="1" aria-label="Место ловли">
+          <div class="row g-4 spot-location-layout">
+            <div class="col-md-5">
+              <div class="d-grid gap-3">
+                <div><label class="form-label" for="spot-waterbody">Водоём <span class="text-danger">*</span></label><select class="form-select" id="spot-waterbody"><option value="">Выберите водоём</option></select></div>
+                <div><label class="form-label" for="spot-coordinates">Координаты X:Y <span class="text-danger">*</span></label><input class="form-control" id="spot-coordinates" placeholder="33:33" disabled inputmode="decimal"><div class="form-text" id="spot-coordinate-status">Сначала выберите водоём.</div></div>
+                <div><label class="form-label" for="spot-clip">Клипса</label><input class="form-control" type="number" min="1" step="1" id="spot-clip" placeholder="Необязательно"></div>
+                <div><label class="form-label" for="spot-depth">Глубина, см</label><input class="form-control" type="number" min="1" step="1" id="spot-depth" placeholder="Необязательно"></div>
+                <div><label class="form-label" for="spot-speed">Скорость проводки</label><input class="form-control" type="number" min="1" max="50" step="1" id="spot-speed" placeholder="1–50, необязательно"></div>
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div id="spot-map-wrapper" class="d-none">
+                <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                  <div class="btn-group btn-group-sm" aria-label="Масштаб карты"><button class="btn btn-outline-secondary" id="spot-zoom-in" type="button" aria-label="Увеличить">+</button><button class="btn btn-outline-secondary" id="spot-zoom-reset" type="button" aria-label="Сбросить масштаб">○</button><button class="btn btn-outline-secondary" id="spot-zoom-out" type="button" aria-label="Уменьшить">−</button></div>
+                  <span class="small text-body-secondary">Нажмите на карте, чтобы указать координаты</span>
+                </div>
+                <div class="spot-map border rounded" id="spot-map"></div>
+              </div>
+              <p class="text-body-secondary small d-none" id="spot-no-map">У водоёма нет карты с настроенными границами координат.</p>
+            </div>
+          </div>
+        </section>
+        <section class="spot-step d-none" data-step="2" aria-label="Виды рыб"><p class="text-body-secondary small">Выберите Разнорыбицу отдельно или от 1 до 5 видов рыб.</p><input class="form-control mb-3" type="search" id="spot-fish-search" placeholder="Поиск рыбы по названию" aria-label="Поиск рыбы"><div class="spot-fish-list" id="spot-fish-list"></div><div class="small text-body-secondary mt-2" id="spot-fish-count"></div></section>
+        <section class="spot-step d-none" data-step="3" aria-label="Комментарий"><label class="form-label" for="spot-comment">Комментарий (необязательно)</label><textarea id="spot-comment" class="form-control" rows="7" maxlength="20000" placeholder="Особенности места ловли, приманки, советы…"></textarea></section>
+        <section class="spot-step d-none" data-step="4" aria-label="Скриншоты"><p class="text-body-secondary small">Добавьте 4–10 скриншотов (PNG, JPG, WebP), до 10 МБ каждый. Первый станет обложкой. Перетаскивайте миниатюры, чтобы изменить порядок.</p><div class="spot-dropzone border rounded p-4 text-center mb-3" id="spot-dropzone" role="button" tabindex="0"><div class="h4">＋</div><strong>Перетащите скриншоты сюда</strong><div class="small text-body-secondary">или нажмите для выбора файлов</div><input type="file" id="spot-files" accept="image/png,image/jpeg,image/webp" multiple class="visually-hidden" aria-label="Выбрать скриншоты"></div><div class="small mb-2" id="spot-file-count">0 из 4–10</div><div class="spot-image-grid" id="spot-images"></div></section>
+        <section class="spot-step d-none" data-step="5" aria-label="Предпросмотр"><div class="spot-preview-main rounded border"><img id="spot-preview-image" alt="Предпросмотр скриншота"></div><div class="spot-preview-thumbs" id="spot-preview-thumbs"></div><div class="spot-preview-details border rounded mt-3" role="region" aria-label="Информация о месте ловли" tabindex="0"><dl class="row mb-0" id="spot-summary"></dl></div></section>
+      </div>
+      <div class="modal-footer justify-content-between"><button type="button" class="btn btn-outline-secondary" id="spot-back">Назад</button><button type="button" class="btn btn-primary" id="spot-next">Далее <span aria-hidden="true">›</span></button></div>
+    </div>
+  </div>
+</div>
+<div class="toast-container position-fixed bottom-0 end-0 p-3 spot-toast-container"><div id="spot-success" class="toast text-bg-success" role="status" aria-live="polite" aria-atomic="true"><div class="d-flex"><div class="toast-body">Место ловли успешно добавлено</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Закрыть"></button></div></div></div>
+<link rel="stylesheet" href="{% versioned_static 'css/fishing-spot-wizard.css' %}">
+<script src="{% versioned_static 'js/fishing-spot-wizard.js' %}" defer></script>

@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     "waterbodies.apps.WaterbodiesConfig",
     "fish.apps.FishConfig",
     "records.apps.RecordsConfig",
+    "fishing_spots.apps.FishingSpotsConfig",
 ]
 
 MIDDLEWARE = [

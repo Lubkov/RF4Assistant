@@ -1,0 +1,61 @@
+.spot-fab{position:fixed;bottom:65px;right:26px;z-index:1030;width:58px;height:58px;border:0;border-radius:999px;display:flex;align-items:center;justify-content:flex-start;gap:9px;padding:0;background:transparent;color:#fff;cursor:pointer;overflow:hidden;white-space:nowrap;transition:width .28s ease,background-color .28s ease;box-sizing:border-box}
+.spot-fab-icon{display:block;flex:none;width:58px;height:58px;object-fit:contain}
+.spot-fab-label{flex:none;text-align:left;opacity:0;transform:translateX(-6px);font-size:15px;font-weight:600;line-height:1.2;pointer-events:none;transition:opacity .16s ease,transform .28s ease}
+@media(hover:hover) and (pointer:fine){.spot-fab:hover{width:245px;background:#267CB5}.spot-fab:hover .spot-fab-label{opacity:1;transform:translateX(0)}}
+.spot-fab:focus-visible{width:245px;background:#267CB5}
+.spot-fab:focus-visible .spot-fab-label{opacity:1;transform:translateX(0)}
+@media(max-width:600px){.spot-fab-icon{width:52px;height:52px}}
+@media(prefers-reduced-motion:reduce){.spot-fab,.spot-fab-label{transition:none}}
+.spot-fab:focus-visible{outline:2px solid var(--bs-primary);outline-offset:3px}
+.spot-progress{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}
+.spot-progress span{height:7px;border-radius:4px;background:var(--bs-tertiary-bg)}
+.spot-progress span.active{background:var(--bs-primary)}
+.spot-choice{border:1px solid var(--bs-border-color);border-radius:9px;padding:14px 16px 14px 40px;cursor:pointer;margin:0}
+.spot-choice:has(input:checked){border-color:var(--bs-primary);background:rgba(13,110,253,.09)}
+.spot-map{height:clamp(240px,35vh,390px);background:var(--bs-tertiary-bg);overflow:hidden}
+.spot-marker{background:#26cb65;border:2px solid #101010;border-radius:50%;width:14px;height:14px;box-shadow:0 0 3px #000}
+.spot-fish-list{max-height:330px;overflow:auto;border:1px solid var(--bs-border-color);border-radius:8px}
+.spot-fish-option{display:flex;align-items:center;gap:10px;padding:9px 13px;border-bottom:1px solid var(--bs-border-color);cursor:pointer}
+.spot-fish-option:last-child{border:0}.spot-fish-option:hover{background:var(--bs-tertiary-bg)}
+.spot-dropzone{border-style:dashed!important;cursor:pointer}.spot-dropzone.dragging{border-color:var(--bs-primary)!important;background:rgba(13,110,253,.10)}
+.spot-image-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.spot-upload-card{position:relative;border:1px solid var(--bs-border-color);border-radius:7px;padding:6px;height:150px;cursor:grab;overflow:hidden}
+.spot-upload-card img{width:100%;height:100%;object-fit:contain;background:#17191b;border-radius:4px}
+.spot-image-number{position:absolute;top:10px;left:10px;min-width:23px;padding:1px 6px;border-radius:4px;background:rgba(0,0,0,.76);color:#fff;font-size:.8rem;font-weight:600;text-align:center;line-height:1.45}
+.spot-image-controls{position:absolute;z-index:2;cursor:default;user-select:none;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:7px 9px;background:rgba(0,0,0,.75);opacity:0;visibility:hidden;transition:opacity .15s ease,visibility .15s ease}
+.spot-upload-card:hover .spot-image-controls,.spot-upload-card:focus-within .spot-image-controls{opacity:1;visibility:visible}
+.spot-image-control{cursor:pointer;position:relative;z-index:3;flex:0 0 29px;width:29px;height:29px;min-width:29px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:0;font-size:1.3rem;line-height:1;border:2px solid rgba(255,255,255,.65);border-radius:4px;cursor:pointer;touch-action:manipulation;--bs-btn-hover-bg:#0d6efd;--bs-btn-hover-border-color:#0d6efd;--bs-btn-hover-color:#fff}
+.spot-image-control:is(:hover,:focus-visible):not(:disabled){border-color:var(--bs-primary);background:var(--bs-primary);color:#fff;box-shadow:none}
+.spot-image-control:disabled{opacity:.35}
+@media(hover:none){.spot-image-controls{opacity:1;visibility:visible}}
+.spot-preview-main{height:clamp(170px,28vh,270px);display:grid;place-items:center;background:#111}
+.spot-preview-main img{width:100%;height:100%;object-fit:contain;min-height:0}
+.spot-preview-thumbs{display:flex;gap:8px;overflow-x:auto;margin-top:9px;padding-bottom:5px}
+.spot-preview-thumbs button{border:2px solid transparent;background:transparent;border-radius:5px;padding:2px;flex-shrink:0}
+.spot-preview-thumbs button.active{border-color:var(--bs-primary)}
+.spot-preview-thumbs img{width:68px;height:46px;object-fit:contain}
+.spot-toast-container{z-index:1100}
+@media(max-width:600px){.spot-fab{right:16px;bottom:40px;width:52px;height:52px}}
+
+/* Narrow wizard: stacked choices and two-column fishing location form. */
+.spot-category-list{max-width:100%}
+.spot-location-layout .form-label{margin-bottom:.35rem}
+.spot-location-layout .spot-map{height:clamp(280px,45vh,420px)}
+@media(max-width:767.98px){.spot-location-layout .spot-map{height:280px}}
+
+/* Compact gallery with one independently scrollable text details area. */
+.spot-preview-details{max-height:190px;overflow-y:auto;overflow-x:hidden;padding:12px 14px;overscroll-behavior:contain}
+.spot-preview-details dt,.spot-preview-details dd{overflow-wrap:anywhere;white-space:pre-wrap}
+
+/* After the first screenshot, replace the large dropzone with a compact add tile. */
+.spot-add-card{display:flex;align-items:center;justify-content:center;width:100%;background:var(--bs-tertiary-bg);border:1px dashed var(--bs-border-color);color:var(--bs-primary);cursor:pointer}
+.spot-add-card:hover,.spot-add-card:focus-visible,.spot-add-card.dragging{border-color:var(--bs-primary);background:rgba(13,110,253,.08)}
+.spot-add-icon{display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:5rem;line-height:1;font-weight:300;transform:translateY(-4px)}
+/* Drag the screenshot tile instead of initiating the browser's native image drag. */
+.spot-upload-card img{-webkit-user-drag:none;user-select:none;pointer-events:none}
+
+/* Slightly tighter dialog header and vertical spacing. */
+#spot-modal .modal-header{padding-top:10px;padding-bottom:10px}
+#spot-modal .modal-body{padding-top:11px}
+#spot-modal .spot-preview-thumbs{margin-top:4px}
+#spot-modal .spot-preview-details{margin-top:7px!important}
