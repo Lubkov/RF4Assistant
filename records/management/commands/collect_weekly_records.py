@@ -1,6 +1,7 @@
 import json
 import time
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import timezone
 from records.sources import REGION_NAMES
 from records.worker import run_weekly
 
@@ -14,6 +15,10 @@ class Command(BaseCommand):
         parser.add_argument("--interval-minutes", type=int, default=15)
         parser.add_argument("--loop", action="store_true", help="Keep polling (run as a separate process)")
 
+    @staticmethod
+    def timestamp():
+        return timezone.localtime().strftime("%Y-%m-%d %H:%M")
+
     def handle(self, *args, **options):
         minutes = options["interval_minutes"]
         if minutes < 5:
@@ -22,12 +27,12 @@ class Command(BaseCommand):
             try:
                 result = run_weekly(regions=options["regions"], headless=not options["headful"])
                 for item in result["processed"]:
-                    self.stdout.write(f"[ok] {item['region']}: {item['total']} records, {item['new']} new")
+                    self.stdout.write(f"{self.timestamp()} [ok] {item['region']}: {item['total']} records, {item['new']} new")
                 for item in result["errors"]:
-                    self.stderr.write(f"[error] {item['region']}: {item['error']}")
-                self.stdout.write(f"[summary] sources={len(result['processed'])} errors={len(result['errors'])}")
+                    self.stderr.write(f"{self.timestamp()} [error] {item['region']}: {item['error']}")
+                self.stdout.write(f"{self.timestamp()} [summary] sources={len(result['processed'])} errors={len(result['errors'])}")
             except Exception as exc:
-                self.stderr.write(f"[error] collection failed: {exc}")
+                self.stderr.write(f"{self.timestamp()} [error] collection failed: {exc}")
                 if not options["loop"]:
                     raise CommandError(str(exc)) from exc
             if not options["loop"]:
@@ -37,5 +42,5 @@ class Command(BaseCommand):
             try:
                 time.sleep(minutes * 60)
             except KeyboardInterrupt:
-                self.stdout.write("Stopped")
+                self.stdout.write(f"{self.timestamp()} Stopped")
                 return
