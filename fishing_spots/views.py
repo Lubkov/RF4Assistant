@@ -6,6 +6,11 @@ import math
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import transaction
+from django.core.paginator import Paginator
+from django.shortcuts import render
+from django.db.models import Prefetch
+
+from fish.models import Fish
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -16,6 +21,47 @@ from waterbodies.models import Waterbody
 from .models import FishingSpot, FishingSpotCategory, FishingSpotFish, FishingSpotScreenshot
 
 MAX_FILE_BYTES = 10 * 1024 * 1024
+
+
+@require_GET
+def list_spots(request):
+    """Public, read-only listing of saved fishing spots."""
+    waterbody_id = request.GET.get("waterbody", "")
+    fish_id = request.GET.get("fish", "")
+    waterbody_id = waterbody_id if waterbody_id.isdecimal() else ""
+    fish_id = fish_id if fish_id.isdecimal() else ""
+
+    waterbodies = Waterbody.objects.filter(is_active=True).order_by("sort_order", "level", "name")
+    fishes = Fish.objects.filter(is_active=True).order_by("name")
+    if waterbody_id:
+        fishes = fishes.filter(waterbody_fish__waterbody_id=int(waterbody_id)).distinct()
+    if fish_id and not fishes.filter(pk=int(fish_id)).exists():
+        fish_id = ""
+
+    spots = FishingSpot.objects.select_related("waterbody")
+    if waterbody_id:
+        spots = spots.filter(waterbody_id=int(waterbody_id))
+    if fish_id:
+        spots = spots.filter(fish__pk=int(fish_id))
+
+    spots = spots.prefetch_related(
+        Prefetch("screenshots", queryset=FishingSpotScreenshot.objects.order_by("position", "pk")),
+        Prefetch("categories", queryset=FishingSpotCategory.objects.order_by("pk")),
+        Prefetch("spot_fish", queryset=FishingSpotFish.objects.select_related("fish").order_by("pk")),
+    ).order_by("-created_at", "-pk")
+    page_obj = Paginator(spots, 20).get_page(request.GET.get("page"))
+    for spot in page_obj.object_list:
+        images = spot.screenshots.all()
+        spot.cover = images[0] if images else None
+
+    return render(request, "fishing_spots/list.html", {
+        "page_obj": page_obj,
+        "waterbodies_filter": waterbodies,
+        "fish_filter": fishes,
+        "selected_waterbody": waterbody_id,
+        "selected_fish": fish_id,
+    })
+
 
 
 def bad(message):

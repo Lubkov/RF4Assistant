@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% load versioned_static %}
+
+{% block title %}Места ловли в Russian Fishing 4 — RF4 Assistant{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% versioned_static 'css/fishing-spot-list.css' %}">{% endblock %}
+{% block content %}
+<section aria-labelledby="spots-heading">
+  <h1 id="spots-heading" class="h2 mb-4 d-flex align-items-center gap-2">
+    <svg class="heading-icon flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s7-7.1 7-13a7 7 0 1 0-14 0c0 5.9 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+    <span>Места ловли в Russian Fishing 4</span>
+  </h1>
+
+  <form method="get" class="row g-3 align-items-end mb-4" role="search" aria-label="Фильтры мест ловли" id="spot-list-filters">
+    <div class="col-12 col-sm-6 col-lg-4">
+      <label for="spot-filter-waterbody" class="form-label">Водоём</label>
+      <select name="waterbody" id="spot-filter-waterbody" class="form-select">
+        <option value="">Все водоёмы</option>
+        {% for waterbody in waterbodies_filter %}
+          <option value="{{ waterbody.pk }}"{% if selected_waterbody == waterbody.pk|stringformat:'s' %} selected{% endif %}>{{ waterbody.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-4">
+      <label for="spot-filter-fish" class="form-label">Вид рыбы</label>
+      <select name="fish" id="spot-filter-fish" class="form-select">
+        <option value="">Все виды</option>
+        {% for fish in fish_filter %}
+          <option value="{{ fish.pk }}"{% if selected_fish == fish.pk|stringformat:'s' %} selected{% endif %}>{{ fish.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+  </form>
+
+  {% if page_obj.object_list %}
+    <div class="spot-card-grid mb-4">
+      {% for spot in page_obj %}
+        <article class="card spot-list-card h-100 overflow-hidden">
+          <div class="spot-list-meta">
+            <div class="spot-list-categories">
+              {% for category in spot.categories.all %}
+                <span class="badge text-bg-secondary spot-list-category">{{ category.get_category_display }}</span>
+              {% endfor %}
+            </div>
+            <time class="spot-list-date" datetime="{{ spot.created_at|date:'c' }}">{{ spot.created_at|date:"j E, H:i" }}</time>
+          </div>
+          <div class="spot-list-media">
+          {% if spot.cover and spot.cover.image %}
+            <img src="{{ spot.cover.image.url }}" class="spot-list-image" alt="Место ловли на водоёме {{ spot.waterbody.name }}" loading="lazy">
+          {% else %}
+            <div class="spot-list-image spot-list-no-image d-flex align-items-center justify-content-center text-body-secondary" aria-label="Нет скриншота">
+              <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 3 3 3-4 5 6"/></svg>
+            </div>
+          {% endif %}
+          </div>
+          <div class="card-body d-flex flex-column gap-2 p-3">
+            <h2 class="h6 card-title mb-0 spot-list-title" title="{{ spot.waterbody.name }} {{ spot.x|floatformat:'-2' }}:{{ spot.y|floatformat:'-2' }}">{{ spot.waterbody.name }} {{ spot.x|floatformat:"-2" }}:{{ spot.y|floatformat:"-2" }}</h2>
+            <p class="card-text spot-list-description small mb-0">{% if spot.is_mixed_fish %}Разнорыбица{% else %}{% for link in spot.spot_fish.all %}{% if not forloop.first %}, {% endif %}{{ link.fish.name }}{% empty %}Виды рыб не указаны{% endfor %}{% endif %}</p>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+    {% if page_obj.paginator.num_pages > 1 %}
+      <nav aria-label="Страницы мест ловли">
+        <ul class="pagination justify-content-center flex-wrap">
+          <li class="page-item{% if not page_obj.has_previous %} disabled{% endif %}"><a class="page-link" href="?waterbody={{ selected_waterbody }}&amp;fish={{ selected_fish }}&amp;page={% if page_obj.has_previous %}{{ page_obj.previous_page_number }}{% else %}1{% endif %}" aria-label="Предыдущая страница">«</a></li>
+          {% for n in page_obj.paginator.page_range %}
+            {% if n == page_obj.number or n >= page_obj.number|add:'-2' and n <= page_obj.number|add:'2' or n == 1 or n == page_obj.paginator.num_pages %}
+              <li class="page-item{% if n == page_obj.number %} active{% endif %}"><a class="page-link" href="?waterbody={{ selected_waterbody }}&amp;fish={{ selected_fish }}&amp;page={{ n }}"{% if n == page_obj.number %} aria-current="page"{% endif %}>{{ n }}</a></li>
+            {% endif %}
+          {% endfor %}
+          <li class="page-item{% if not page_obj.has_next %} disabled{% endif %}"><a class="page-link" href="?waterbody={{ selected_waterbody }}&amp;fish={{ selected_fish }}&amp;page={% if page_obj.has_next %}{{ page_obj.next_page_number }}{% else %}{{ page_obj.number }}{% endif %}" aria-label="Следующая страница">»</a></li>
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <p class="text-body-secondary py-4">Места ловли по выбранным фильтрам не найдены.</p>
+  {% endif %}
+</section>
+<script>
+  (() => {
+    const form = document.getElementById('spot-list-filters');
+    const waterbody = document.getElementById('spot-filter-waterbody');
+    const fish = document.getElementById('spot-filter-fish');
+    waterbody.addEventListener('change', () => { fish.value = ''; form.requestSubmit(); });
+    fish.addEventListener('change', () => form.requestSubmit());
+  })();
+</script>
+{% endblock %}
