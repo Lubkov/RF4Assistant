@@ -11,6 +11,12 @@
   </h1>
 
   <form method="get" class="row g-3 align-items-end mb-4" role="search" aria-label="Фильтры мест ловли" id="spot-list-filters">
+    <div class="col-auto">
+      <button type="button" class="btn btn-primary d-inline-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#spot-modal">
+        <img src="{% versioned_static 'icons/add-fishing-spot.svg' %}" width="24" height="24" alt="" aria-hidden="true">
+        Добавить
+      </button>
+    </div>
     <div class="col-12 col-sm-6 col-lg-4">
       <label for="spot-filter-waterbody" class="form-label">Водоём</label>
       <select name="waterbody" id="spot-filter-waterbody" class="form-select">
@@ -35,11 +41,11 @@
   {% if page_obj.object_list %}
     <div class="spot-card-grid mb-4">
       {% for spot in page_obj %}
-        <article class="card spot-list-card h-100 overflow-hidden">
+        <article class="card spot-list-card h-100 overflow-hidden" role="button" tabindex="0" data-spot-detail-url="{% url 'fishing_spots:detail' spot.pk %}" data-spot-waterbody="{{ spot.waterbody.name }}" data-spot-coordinates="{{ spot.x|floatformat:'-2' }}:{{ spot.y|floatformat:'-2' }}" aria-label="Просмотреть место ловли: {{ spot.waterbody.name }} {{ spot.x|floatformat:'-2' }}:{{ spot.y|floatformat:'-2' }}">
           <div class="spot-list-meta">
             <div class="spot-list-categories">
               {% for category in spot.categories.all %}
-                <span class="badge text-bg-secondary spot-list-category">{{ category.get_category_display }}</span>
+                <span class="badge spot-list-category spot-list-category--{{ category.category }}">{{ category.get_category_display }}</span>
               {% endfor %}
             </div>
             <time class="spot-list-date" datetime="{{ spot.created_at|date:'c' }}">{{ spot.created_at|date:"j E, H:i" }}</time>
@@ -77,6 +83,8 @@
     <p class="text-body-secondary py-4">Места ловли по выбранным фильтрам не найдены.</p>
   {% endif %}
 </section>
+{% include "fishing_spots/_detail_modal.html" %}
+<script src="{% versioned_static 'js/fishing-spot-detail.js' %}" defer></script>
 <script>
   (() => {
     const form = document.getElementById('spot-list-filters');

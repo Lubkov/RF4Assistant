@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.core.paginator import Paginator
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.db.models import Prefetch
 
 from fish.models import Fish
@@ -196,3 +196,16 @@ def create(request):
         return JsonResponse({"ok": True, "id": spot.pk})
     except (ValueError, TypeError, ValidationError, json.JSONDecodeError) as exc:
         return bad("; ".join(exc.messages) if isinstance(exc, ValidationError) else exc)
+
+
+@require_GET
+def spot_detail(request, pk):
+    """Read-only modal content for an existing fishing spot."""
+    spot = get_object_or_404(
+        FishingSpot.objects.select_related("waterbody").prefetch_related(
+            Prefetch("screenshots", queryset=FishingSpotScreenshot.objects.order_by("position", "pk")),
+            Prefetch("categories", queryset=FishingSpotCategory.objects.order_by("pk")),
+            Prefetch("spot_fish", queryset=FishingSpotFish.objects.select_related("fish").order_by("pk")),
+        ), pk=pk,
+    )
+    return render(request, "fishing_spots/_detail.html", {"spot": spot})

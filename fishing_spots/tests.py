@@ -150,3 +150,44 @@ class SpotListTests(TestCase):
         FishingSpot.objects.create(waterbody=body, x=64, y=94, is_mixed_fish=True)
         response = self.client.get(reverse('fishing_spots:list'))
         self.assertContains(response, 'Разнорыбица')
+
+
+class SpotDetailTests(TestCase):
+    def test_spot_detail_contains_preview_without_wizard_steps(self):
+        body = Waterbody.objects.get(pk=1)
+        spot = FishingSpot.objects.create(
+            waterbody=body, x=64, y=94, clip=18, depth_cm=250,
+            retrieve_speed=35, comment='Точка у берега',
+        )
+        FishingSpotCategory.objects.create(fishing_spot=spot, category='farm')
+        response = self.client.get(reverse('fishing_spots:detail', args=[spot.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Клипса')
+        self.assertContains(response, '250 см')
+        self.assertContains(response, 'Точка у берега')
+        self.assertContains(response, 'Фарм')
+        self.assertNotContains(response, 'spot-progress')
+
+    def test_detail_hides_empty_optional_fields_and_moves_categories_to_header(self):
+        body = Waterbody.objects.get(pk=1)
+        spot = FishingSpot.objects.create(
+            waterbody=body, x=64, y=94, is_mixed_fish=True,
+            comment='   ',
+        )
+        FishingSpotCategory.objects.create(fishing_spot=spot, category='farm')
+        FishingSpotCategory.objects.create(fishing_spot=spot, category='trophy')
+        response = self.client.get(reverse('fishing_spots:detail', args=[spot.pk]))
+        self.assertContains(response, 'data-spot-categories="Фарм, Трофей"')
+        self.assertNotContains(response, '<dt class="col-sm-4 mb-2">Категория</dt>')
+        for label in ('Клипса', 'Глубина', 'Скорость проводки', 'Комментарий'):
+            self.assertNotContains(response, f'>{label}</dt>')
+        self.assertContains(response, 'Разнорыбица')
+
+    def test_detail_missing_spot_returns_404(self):
+        response = self.client.get(reverse('fishing_spots:detail', args=[99999999]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_add_button_and_detail_modal_on_list(self):
+        response = self.client.get(reverse('fishing_spots:list'))
+        self.assertContains(response, 'Добавить')
+        self.assertContains(response, 'spot-detail-modal')

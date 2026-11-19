@@ -1,5 +1,5 @@
+import json
 import time
-from datetime import timedelta
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
 from records.sources import REGION_NAMES
@@ -24,30 +24,21 @@ class Command(BaseCommand):
         if minutes < 5:
             raise CommandError("Minimum interval is 5 minutes")
         while True:
-            started = time.monotonic()
-            self.stdout.write(f"{self.timestamp()} [start] Collecting weekly records")
-            result = None
             try:
                 result = run_weekly(regions=options["regions"], headless=not options["headful"])
                 for item in result["processed"]:
                     self.stdout.write(f"{self.timestamp()} [ok] {item['region']}: {item['total']} records, {item['new']} new")
                 for item in result["errors"]:
                     self.stderr.write(f"{self.timestamp()} [error] {item['region']}: {item['error']}")
-                elapsed = int(time.monotonic() - started)
-                self.stdout.write(
-                    f"{self.timestamp()} [summary] sources={len(result['processed'])} "
-                    f"errors={len(result['errors'])} duration={elapsed // 60}m {elapsed % 60}s"
-                )
+                self.stdout.write(f"{self.timestamp()} [summary] sources={len(result['processed'])} errors={len(result['errors'])}")
             except Exception as exc:
                 self.stderr.write(f"{self.timestamp()} [error] collection failed: {exc}")
                 if not options["loop"]:
                     raise CommandError(str(exc)) from exc
             if not options["loop"]:
-                if result is not None and result["errors"]:
+                if result["errors"]:
                     raise CommandError("Some regional sources failed; see record-logs/last-run.json")
                 return
-            next_run = timezone.localtime() + timedelta(minutes=minutes)
-            self.stdout.write(f"{self.timestamp()} [next] Scheduled at {next_run:%Y-%m-%d %H:%M}")
             try:
                 time.sleep(minutes * 60)
             except KeyboardInterrupt:

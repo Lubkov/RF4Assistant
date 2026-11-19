@@ -1,0 +1,71 @@
+{% with categories=spot.categories.all %}
+<div data-spot-categories="{% for cat in categories %}{% if not forloop.first %}, {% endif %}{{ cat.get_category_display }}{% endfor %}">
+{% if spot.screenshots.all %}
+  <div class="spot-preview-main rounded border">
+    {% for screenshot in spot.screenshots.all %}{% if forloop.first %}<img id="spot-detail-image" src="{{ screenshot.image.url }}" alt="Скриншот места ловли">{% endif %}{% endfor %}
+  </div>
+  <div class="spot-preview-thumbs" id="spot-detail-thumbs">
+    {% for screenshot in spot.screenshots.all %}
+      <button type="button" class="{% if forloop.first %}active{% endif %}" data-image-url="{{ screenshot.image.url }}" aria-label="Показать скриншот {{ forloop.counter }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">
+        <img src="{{ screenshot.image.url }}" alt="" loading="lazy">
+      </button>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="spot-preview-main rounded border text-body-secondary">Скриншоты отсутствуют</div>
+{% endif %}
+
+<section class="spot-detail-block spot-detail-fish-section border rounded mt-3" aria-label="Виды рыб" data-spot-fish-section>
+  <div class="spot-detail-fish-row">
+    {% if spot.is_mixed_fish %}
+      <span class="spot-detail-fish-item">Разнорыбица</span>
+    {% elif spot.spot_fish.all %}
+      <details class="spot-detail-fish-details" data-spot-fish-details>
+        <summary class="spot-detail-fish-summary" aria-label="Развернуть виды рыб">
+          <span class="spot-detail-fish-preview" data-spot-fish-preview aria-hidden="true">
+            {% for link in spot.spot_fish.all %}
+              <span class="spot-detail-fish-item">
+                {% if link.fish.image %}<img src="{{ link.fish.image.url }}" alt="" class="spot-detail-fish-icon" width="24" height="24" loading="lazy">{% endif %}
+                <span>{{ link.fish.name }}</span>
+              </span>
+            {% endfor %}
+          </span>
+          <span class="spot-detail-fish-toggle text-body-secondary small text-nowrap" data-spot-fish-toggle>
+            <span>{{ spot.spot_fish.all|length }} видов рыб</span>
+            <span class="spot-detail-fish-chevron" aria-hidden="true">⌄</span>
+          </span>
+        </summary>
+        <div class="spot-detail-fish-expanded" data-spot-fish-expanded>
+          {% for link in spot.spot_fish.all %}
+            <span class="spot-detail-fish-item">
+              {% if link.fish.image %}<img src="{{ link.fish.image.url }}" alt="" class="spot-detail-fish-icon" width="24" height="24" loading="lazy">{% endif %}
+              <span>{{ link.fish.name }}</span>
+            </span>
+          {% endfor %}
+        </div>
+      </details>
+    {% else %}
+      <span class="text-body-secondary">Виды рыб не указаны</span>
+    {% endif %}
+  </div>
+</section>
+
+{% if spot.clip is not None or spot.depth_cm is not None or spot.retrieve_speed is not None %}
+<section class="spot-detail-block border rounded mt-2" aria-label="Параметры ловли">
+  <div class="spot-detail-parameters">
+    {% if spot.clip is not None %}<span><strong>Клипса:</strong> {{ spot.clip }}м</span>{% endif %}
+    {% if spot.depth_cm is not None %}<span><strong>Глубина:</strong> {{ spot.depth_cm }} см</span>{% endif %}
+    {% if spot.retrieve_speed is not None %}<span><strong>Скорость проводки:</strong> {{ spot.retrieve_speed }}</span>{% endif %}
+  </div>
+</section>
+{% endif %}
+{% if spot.comment.strip %}
+<section class="spot-detail-block spot-detail-comment border rounded mt-2" aria-label="Комментарий" data-spot-comment>
+  <div class="spot-detail-comment-text" id="spot-detail-comment-text" data-spot-comment-text>{{ spot.comment|linebreaksbr }}</div>
+  <button type="button" class="spot-detail-comment-toggle text-body-secondary" data-spot-comment-toggle hidden aria-controls="spot-detail-comment-text" aria-expanded="false" aria-label="Развернуть комментарий">
+    <span class="spot-detail-comment-chevron" aria-hidden="true">⌄</span>
+  </button>
+</section>
+{% endif %}
+</div>
+{% endwith %}

@@ -21,11 +21,82 @@
   background: var(--bs-tertiary-bg);
 }
 .spot-list-categories { display: flex; flex-wrap: wrap; gap: .2rem; min-width: 0; }
+/* Category badges shared by list cards and the detail modal. */
 .spot-list-category { font-size: .65rem; font-weight: 500; padding: .25rem .35rem; }
+.spot-list-category--farm { background-color: #105d1e; color: #fff; }
+.spot-list-category--trophy { background-color: #fcc400; color: #1a1a1a; }
+.spot-list-category--qualification { background-color: #a5002f; color: #fff; }
+.spot-list-category--task { background-color: #5e3421; color: #fff; }
+/* Larger category badges only in the fishing spot detail header. */
+#spot-detail-modal #spot-detail-title .spot-list-category { font-size: .8rem; padding: .5rem .6rem; font-weight: 500; }
 .spot-list-date {
   flex-shrink: 0;
   text-align: right;
   font-size: .67rem;
   line-height: 1.35;
   color: var(--bs-secondary-color);
+}
+
+.spot-list-card[role="button"]{cursor:pointer}
+.spot-list-card[role="button"]:hover{border-color:var(--bs-primary)}
+.spot-list-card[role="button"]:focus-visible{outline:2px solid var(--bs-primary);outline-offset:2px}
+#spot-detail-modal .modal-header{padding-top:10px;padding-bottom:10px}
+#spot-detail-modal .modal-body{padding-top:11px}
+#spot-detail-modal .spot-preview-thumbs{margin-top:4px}
+#spot-detail-modal .spot-preview-details{margin-top:7px!important}
+
+/* Read-only fishing spot detail: taller gallery and independent information blocks. */
+#spot-detail-modal .spot-preview-main { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+#spot-detail-modal .spot-detail-block { padding: .65rem .85rem; min-width: 0; }
+#spot-detail-modal .spot-detail-fish-section:has(.spot-detail-fish-details:not(.is-fit)) { cursor: pointer; }
+#spot-detail-modal .spot-detail-fish-row { display: flex; align-items: flex-start; gap: .6rem; min-width: 0; }
+#spot-detail-modal .spot-detail-fish-details { flex: 1 1 auto; min-width: 0; }
+#spot-detail-modal .spot-detail-fish-summary { display: flex; align-items: center; gap: .5rem; min-width: 0; list-style: none; cursor: pointer; }
+#spot-detail-modal .spot-detail-fish-summary::-webkit-details-marker { display: none; }
+#spot-detail-modal .spot-detail-fish-summary:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+#spot-detail-modal .spot-detail-fish-preview { display: flex; flex: 1 1 auto; align-items: center; min-width: 0; gap: .5rem; overflow: hidden; white-space: nowrap; }
+#spot-detail-modal .spot-detail-fish-item { display: inline-flex; align-items: center; flex: 0 0 auto; gap: .3rem; white-space: nowrap; }
+#spot-detail-modal .spot-detail-fish-preview .spot-detail-fish-item[hidden] { display: none !important; }
+#spot-detail-modal .spot-detail-fish-icon { width: 24px; height: 24px; object-fit: contain; }
+#spot-detail-modal .spot-detail-fish-toggle { display: inline-flex; align-items: center; flex: 0 0 auto; gap: .5rem; }
+/* Keep the toggle invisible until JS finishes measuring the available row width.
+   visibility retains its width, so measuring uses the same layout as the final state. */
+#spot-detail-modal .spot-detail-fish-details:not(.is-measured) .spot-detail-fish-toggle { visibility: hidden; }
+#spot-detail-modal .spot-detail-fish-chevron { font-size: 1.25rem; line-height: 1; }
+#spot-detail-modal .spot-detail-fish-details[open] .spot-detail-fish-summary { justify-content: flex-end; }
+#spot-detail-modal .spot-detail-fish-details[open] .spot-detail-fish-preview,
+#spot-detail-modal .spot-detail-fish-details[open] .spot-detail-fish-toggle > span:first-child { display: none; }
+#spot-detail-modal .spot-detail-fish-expanded { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .5rem; }
+#spot-detail-modal .spot-detail-fish-details.is-fit .spot-detail-fish-toggle { display: none; }
+#spot-detail-modal .spot-detail-fish-details.is-fit .spot-detail-fish-summary { cursor: default; }
+#spot-detail-modal .spot-detail-fish-details.is-fit .spot-detail-fish-preview { overflow: visible; }
+#spot-detail-modal .spot-detail-parameters { display: flex; flex-wrap: wrap; gap: .3rem 1.25rem; }
+#spot-detail-modal .spot-detail-comment { display: flex; align-items: flex-start; gap: .5rem; min-width: 0; overflow-wrap: anywhere; }
+#spot-detail-modal .spot-detail-comment.is-overflowing { cursor: pointer; }
+#spot-detail-modal .spot-detail-comment-text { flex: 1 1 auto; min-width: 0; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+#spot-detail-modal .spot-detail-comment.is-expanded .spot-detail-comment-text { display: block; overflow: visible; -webkit-line-clamp: unset; line-clamp: unset; }
+#spot-detail-modal .spot-detail-comment-toggle { flex: 0 0 auto; align-self: flex-start; padding: 0 .15rem; border: 0; background: transparent; line-height: 1.5; font-size: 1.25rem; cursor: pointer; }
+#spot-detail-modal .spot-detail-comment-toggle[hidden] { display: none !important; }
+#spot-detail-modal .spot-detail-comment-toggle:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+
+/* The detail gallery holds up to ten thumbnails in one row without scrolling. */
+#spot-detail-modal .spot-preview-thumbs {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 5px;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+#spot-detail-modal .spot-preview-thumbs button {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 2px;
+}
+#spot-detail-modal .spot-preview-thumbs img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 68 / 46;
+  object-fit: contain;
 }
