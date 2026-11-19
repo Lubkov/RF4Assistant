@@ -151,16 +151,16 @@ def create(request):
         fish_ids = parse_list(request, "fish_ids")
         if any(type(pk) is not int or pk < 1 for pk in fish_ids) or len(set(fish_ids)) != len(fish_ids):
             raise ValueError("Некорректный список рыб.")
-        if (mixed and fish_ids) or (not mixed and not 1 <= len(fish_ids) <= 5):
-            raise ValueError("Выберите Разнорыбицу отдельно либо 1–5 видов рыб.")
+        if mixed or not 1 <= len(fish_ids) <= 10:
+            raise ValueError("Выберите от 1 до 10 видов рыб.")
         valid_fish_count = WaterbodyFish.objects.filter(
             waterbody=body, fish_id__in=fish_ids, fish__is_active=True
         ).values("fish_id").distinct().count()
         if valid_fish_count != len(fish_ids):
             raise ValueError("Выбранные рыбы должны обитать в указанном водоёме.")
         uploads = request.FILES.getlist("screenshots")
-        if not 4 <= len(uploads) <= 10:
-            raise ValueError("Добавьте от 4 до 10 скриншотов.")
+        if not 2 <= len(uploads) <= 10:
+            raise ValueError("Добавьте от 2 до 10 скриншотов.")
         if any(f.size > MAX_FILE_BYTES for f in uploads):
             raise ValueError("Скриншот не должен превышать 10 МБ.")
         spot = FishingSpot(

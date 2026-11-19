@@ -73,7 +73,7 @@ class FishInlineFormSet(CountLimitedInlineFormSet):
 
 
 class ScreenshotInlineFormSet(CountLimitedInlineFormSet):
-    minimum_items = 4
+    minimum_items = 2
     maximum_items = 10
     item_label = "скриншотов"
 

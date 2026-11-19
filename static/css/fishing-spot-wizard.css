@@ -59,3 +59,10 @@
 #spot-modal .modal-body{padding-top:11px}
 #spot-modal .spot-preview-thumbs{margin-top:4px}
 #spot-modal .spot-preview-details{margin-top:7px!important}
+
+/* Split numeric X/Y entry, with a non-interactive colon between fields. */
+.spot-coordinate-pair{display:flex;align-items:center;gap:.5rem;min-width:0}
+.spot-coordinate-pair input{flex:0 0 5.5rem;width:5.5rem;max-width:calc((100% - 2rem)/2);min-width:0;text-align:center}
+.spot-coordinate-pair span{flex:0 0 auto;font-weight:600}
+.spot-choice.spot-choice-disabled{opacity:.45;cursor:not-allowed}
+.spot-choice.spot-choice-disabled .form-check-label{color:var(--bs-secondary-color)}

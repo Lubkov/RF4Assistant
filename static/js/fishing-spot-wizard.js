@@ -5,7 +5,7 @@
   if (!modalNode) return;
   const titles = ['Категория', 'Место ловли', 'Виды рыб', 'Комментарий', 'Скриншоты', 'Предпросмотр'];
   const categoryNames = {farm: 'Фарм', trophy: 'Трофей', qualification: 'Квалификация', task: 'Задание'};
-  const state = {step: 0, bodies: [], selectedFish: new Set(), mixed: false, images: [], selectedPreview: 0, dirty: false};
+  const state = {step: 0, bodies: [], selectedFish: new Set(), images: [], selectedPreview: 0, dirty: false};
   let map = null, marker = null, mapBounds = null, fitZoom = 0, mapImageSize = null, mapBodyId = null, nextBusy = false;
   let pendingClose = false, mapLoadId = 0, mapLoading = false;
   const optionsUrl = '/fishing-spots/options/';
@@ -15,10 +15,36 @@
   function body() { return state.bodies.find(item => String(item.id) === $('spot-waterbody').value); }
   function categories() { return Array.from($('spot-categories').querySelectorAll('input:checked')).map(el => el.value); }
   function coordinates() {
-    const match = $('spot-coordinates').value.trim().replaceAll(',', '.').match(/^(-?\d+(?:\.\d+)?)\s*:\s*(-?\d+(?:\.\d+)?)$/);
-    if (!match || !body()?.map) return null;
-    const x = Number(match[1]), y = Number(match[2]), b = body().map;
+    const xText = $('spot-coordinate-x').value.trim(), yText = $('spot-coordinate-y').value.trim();
+    if (!xText || !yText || !body()?.map) return null;
+    const x = Number(xText), y = Number(yText), b = body().map;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
     return x >= b.x_min && x <= b.x_max && y >= b.y_min && y <= b.y_max ? {x, y} : null;
+  }
+  function coordinateText() { return `${$('spot-coordinate-x').value.trim()}:${$('spot-coordinate-y').value.trim()}`; }
+  function updateCategories() {
+    const selected = categories().length;
+    $('spot-categories').querySelectorAll('input[type=checkbox]').forEach(input => {
+      input.disabled = selected >= 2 && !input.checked;
+      input.closest('.spot-choice').classList.toggle('spot-choice-disabled', input.disabled);
+    });
+  }
+  function updateLocationFields() {
+    const disabled = !body();
+    ['spot-clip', 'spot-depth', 'spot-speed'].forEach(id => { $(id).disabled = disabled; });
+  }
+  // Numeric inputs ignore maxlength: limit X/Y to four digits, excluding the decimal separator.
+  function limitCoordinateDigits(input) {
+    const before = input.value;
+    let digits = 0, separator = false, result = '';
+    for (const char of before) {
+      if (char >= '0' && char <= '9') {
+        if (digits < 4) { result += char; digits++; }
+      } else if (char === '.' && !separator) {
+        result += char; separator = true;
+      }
+    }
+    if (result !== before) input.value = result;
   }
   function validOptional(id, maximum) {
     const value = $(id).value.trim();
@@ -27,11 +53,11 @@
   function valid(step) {
     if (step === 0) return categories().length >= 1 && categories().length <= 2;
     if (step === 1) return !!body()?.map && coordinates() !== null && validOptional('spot-clip') && validOptional('spot-depth') && validOptional('spot-speed', 50);
-    if (step === 2) return state.mixed || (state.selectedFish.size >= 1 && state.selectedFish.size <= 5);
-    if (step === 4) return state.images.length >= 4 && state.images.length <= 10;
+    if (step === 2) return state.selectedFish.size >= 1 && state.selectedFish.size <= 10;
+    if (step === 4) return state.images.length >= 2 && state.images.length <= 10;
     return true;
   }
-  const messages = ['Выберите 1–2 категории.', 'Укажите водоём, корректные координаты и допустимые параметры ловли.', 'Выберите Разнорыбицу или от 1 до 5 видов рыб.', '', 'Добавьте 4–10 скриншотов.', ''];
+  const messages = ['Выберите 1–2 категории.', 'Укажите водоём, корректные координаты и допустимые параметры ловли.', 'Выберите от 1 до 10 видов рыб.', '', 'Добавьте 2–10 скриншотов.', ''];
   function refresh() {
     modalNode.querySelectorAll('.spot-step').forEach((node, index) => node.classList.toggle('d-none', index !== state.step));
     $('spot-step-title').textContent = titles[state.step];
@@ -39,6 +65,8 @@
     $('spot-progress').setAttribute('aria-valuenow', state.step + 1);
     $('spot-progress').querySelectorAll('span').forEach((el, i) => el.classList.toggle('active', i <= state.step));
     $('spot-back').disabled = state.step === 0 || nextBusy;
+    updateCategories();
+    updateLocationFields();
     $('spot-next').disabled = nextBusy || !valid(state.step);
     $('spot-next').textContent = state.step === 5 ? (nextBusy ? 'Сохранение…' : 'Сохранить') : 'Далее ›';
     if (state.step === 1) showMap();
@@ -54,19 +82,15 @@
   function renderFish() {
     const node = $('spot-fish-list'); node.replaceChildren();
     const search = $('spot-fish-search').value.trim().toLocaleLowerCase();
-    // Always show the mixed-fish option first, even when filtering.
-    node.append(makeLabel('Разнорыбица', null, state.mixed, false, (e) => {
-      state.mixed = e.target.checked; if (state.mixed) state.selectedFish.clear(); state.dirty = true; renderFish(); refresh();
-    }));
     const fishes = body()?.fish || [];
     fishes.filter(f => f.fish__name.toLocaleLowerCase().includes(search)).forEach(f => {
       const selected = state.selectedFish.has(f.fish_id);
-      node.append(makeLabel(f.fish__name, f.fish_id, selected, state.mixed || (!selected && state.selectedFish.size >= 5), (e) => {
+      node.append(makeLabel(f.fish__name, f.fish_id, selected, !selected && state.selectedFish.size >= 10, (e) => {
         if (e.target.checked) state.selectedFish.add(f.fish_id); else state.selectedFish.delete(f.fish_id);
         state.dirty = true; renderFish(); refresh();
       }));
     });
-    $('spot-fish-count').textContent = state.mixed ? 'Выбрано: Разнорыбица' : `Выбрано видов: ${state.selectedFish.size} из 5`;
+    $('spot-fish-count').textContent = `Выбрано видов: ${state.selectedFish.size} из 10`;
   }
   function loadLeaflet() {
     if (window.L) return Promise.resolve();
@@ -84,7 +108,8 @@
   function fitMap() { if (!map || !mapBounds) return; map.invalidateSize(); map.setMinZoom(-8); map.fitBounds(mapBounds, {animate:false}); fitZoom = map.getZoom(); map.setMinZoom(fitZoom); map.setMaxZoom(Math.max(4, fitZoom + 3)); }
   function plotMarker() {
     const point = coordinates();
-    $('spot-coordinates').classList.toggle('is-invalid', !!$('spot-coordinates').value.trim() && !point);
+    const hasInput = $('spot-coordinate-x').value.trim() || $('spot-coordinate-y').value.trim();
+    ['spot-coordinate-x', 'spot-coordinate-y'].forEach(id => $(id).classList.toggle('is-invalid', !!hasInput && !point));
     $('spot-coordinate-status').textContent = !body()?.map ? 'Карта с координатами не настроена.' : point ? 'Координаты корректны.' : 'Введите X:Y в пределах карты.';
     if (!map || !mapImageSize) return;
     if (marker) { map.removeLayer(marker); marker = null; }
@@ -98,7 +123,8 @@
     const target = body();
     $('spot-map-wrapper').classList.toggle('d-none', !target?.map);
     $('spot-no-map').classList.toggle('d-none', !!target?.map);
-    $('spot-coordinates').disabled = !target?.map;
+    $('spot-coordinate-x').disabled = !target?.map;
+    $('spot-coordinate-y').disabled = !target?.map;
     if (!target?.map) { clearMap(); return; }
     if (map && mapBodyId === target.id) { setTimeout(() => {map.invalidateSize(); plotMarker();}, 50); return; }
     if (mapLoading) return;
@@ -117,7 +143,8 @@
         const x = bounds.x_min + e.latlng.lng / img.naturalWidth * (bounds.x_max - bounds.x_min);
         const y = bounds.y_min + e.latlng.lat / img.naturalHeight * (bounds.y_max - bounds.y_min);
         if (x < bounds.x_min || x > bounds.x_max || y < bounds.y_min || y > bounds.y_max) return;
-        $('spot-coordinates').value = `${Math.round(x)}:${Math.round(y)}`;
+        $('spot-coordinate-x').value = String(Math.round(x));
+        $('spot-coordinate-y').value = String(Math.round(y));
         state.dirty = true; plotMarker(); refresh();
       });
     }; img.onerror = () => { mapLoading=false; error('Не удалось загрузить изображение карты.'); }; img.src = target.map.url;
@@ -153,7 +180,7 @@
   }
   function renderImages() {
     const container = $('spot-images'); container.replaceChildren();
-    $('spot-file-count').textContent = `${state.images.length} из 4–10`;
+    $('spot-file-count').textContent = `${state.images.length} из 2–10`;
     $('spot-dropzone').classList.toggle('d-none', state.images.length > 0);
     state.images.forEach((entry, index) => {
       const card = document.createElement('div'); card.className = 'spot-upload-card'; card.draggable = true;
@@ -282,17 +309,17 @@
     });
     $('spot-summary').replaceChildren();
     summary('Категория',categories().map(c=>categoryNames[c]).join(', '));summary('Водоём',body()?.name);
-    summary('Рыба',state.mixed?'Разнорыбица':(body()?.fish||[]).filter(f=>state.selectedFish.has(f.fish_id)).map(f=>f.fish__name).join(', '));
-    summary('Координаты',$('spot-coordinates').value);summary('Клипса',$('spot-clip').value);
+    summary('Рыба',(body()?.fish||[]).filter(f=>state.selectedFish.has(f.fish_id)).map(f=>f.fish__name).join(', '));
+    summary('Координаты',coordinateText());summary('Клипса',$('spot-clip').value);
     summary('Глубина',$('spot-depth').value?`${$('spot-depth').value} см`:'');summary('Скорость проводки',$('spot-speed').value);
     summary('Комментарий',$('spot-comment').value);
   }
   function reset() {
-    clearMap();state.step=0;state.selectedFish.clear();state.mixed=false;state.dirty=false;state.selectedPreview=0;nextBusy=false;
+    clearMap();state.step=0;state.selectedFish.clear();state.dirty=false;state.selectedPreview=0;nextBusy=false;
     state.images.forEach(item=>URL.revokeObjectURL(item.url));state.images=[];
     $('spot-categories').querySelectorAll('input').forEach(el=>el.checked=false);
-    for (const id of ['spot-waterbody','spot-coordinates','spot-clip','spot-depth','spot-speed','spot-comment','spot-fish-search']) $(id).value='';
-    $('spot-coordinates').classList.remove('is-invalid');error('');renderFish();renderImages();refresh();
+    for (const id of ['spot-waterbody','spot-coordinate-x','spot-coordinate-y','spot-clip','spot-depth','spot-speed','spot-comment','spot-fish-search']) $(id).value='';
+    ['spot-coordinate-x','spot-coordinate-y'].forEach(id => $(id).classList.remove('is-invalid'));error('');renderFish();renderImages();refresh();
   }
   async function loadOptions() {
     try {
@@ -308,9 +335,9 @@
     nextBusy=true;refresh();error('');
     try {
       const data=new FormData();data.append('categories',JSON.stringify(categories()));data.append('waterbody_id',$('spot-waterbody').value);
-      data.append('coordinates',$('spot-coordinates').value);data.append('clip',$('spot-clip').value);
+      data.append('coordinates',coordinateText());data.append('clip',$('spot-clip').value);
       data.append('depth_cm',$('spot-depth').value);data.append('retrieve_speed',$('spot-speed').value);
-      data.append('is_mixed_fish',String(state.mixed));data.append('fish_ids',JSON.stringify([...state.selectedFish]));
+      data.append('fish_ids',JSON.stringify([...state.selectedFish]));
       data.append('comment',$('spot-comment').value);state.images.forEach(item=>data.append('screenshots',item.file,item.file.name));
       const response=await fetch(createUrl,{method:'POST',body:data,credentials:'same-origin',headers:{'X-CSRFToken':csrf()}});
       const result=await response.json();if(!response.ok || !result.ok)throw Error(result.error||'Ошибка сохранения.');
@@ -327,8 +354,8 @@
   $('spot-next').addEventListener('click',next);
   $('spot-back').addEventListener('click',()=>{if(state.step>0){state.step--;error('');refresh();}});
   $('spot-categories').addEventListener('change',e=>{if(e.target.matches('input')){state.dirty=true;refresh();}});
-  $('spot-waterbody').addEventListener('change',()=>{state.selectedFish.clear();state.mixed=false;$('spot-coordinates').value='';$('spot-fish-search').value='';state.dirty=true;clearMap();renderFish();refresh();});
-  ['spot-coordinates','spot-clip','spot-depth','spot-speed','spot-comment'].forEach(id=>$(id).addEventListener('input',()=>{state.dirty=true;if(id==='spot-coordinates')plotMarker();refresh();}));
+  $('spot-waterbody').addEventListener('change',()=>{state.selectedFish.clear();$('spot-coordinate-x').value='';$('spot-coordinate-y').value='';$('spot-fish-search').value='';state.dirty=true;clearMap();renderFish();refresh();});
+  ['spot-coordinate-x','spot-coordinate-y','spot-clip','spot-depth','spot-speed','spot-comment'].forEach(id=>$(id).addEventListener('input',()=>{if(id==='spot-coordinate-x'||id==='spot-coordinate-y'){limitCoordinateDigits($(id));plotMarker();}state.dirty=true;refresh();}));
   $('spot-fish-search').addEventListener('input',renderFish);
   $('spot-files').addEventListener('change',e=>{addImages(e.target.files);e.target.value='';});
   const dropzone=$('spot-dropzone');

@@ -86,13 +86,27 @@ class WizardTests(TestCase):
         response = self.client.post(reverse('fishing_spots:create'), payload)
         self.assertEqual(response.status_code, 400)
 
-    def test_mixed_fish_without_specific_fish_is_valid(self):
+    def test_mixed_fish_without_specific_fish_is_rejected(self):
         payload = self.payload()
         payload['is_mixed_fish'] = 'true'
         payload['fish_ids'] = '[]'
         response = self.client.post(reverse('fishing_spots:create'), payload)
+        self.assertEqual(response.status_code, 400)
+
+    def test_accept_ten_fish_and_reject_eleven(self):
+        fish_ids = list(Fish.objects.order_by('pk').values_list('pk', flat=True)[:11])
+        self.assertEqual(len(fish_ids), 11)
+        for fish_id in fish_ids:
+            WaterbodyFish.objects.get_or_create(waterbody=self.body, fish_id=fish_id)
+        payload = self.payload()
+        payload['fish_ids'] = json.dumps(fish_ids[:10])
+        response = self.client.post(reverse('fishing_spots:create'), payload)
         self.assertEqual(response.status_code, 200, response.content)
-        self.assertTrue(FishingSpot.objects.get(pk=response.json()['id']).is_mixed_fish)
+        self.assertEqual(FishingSpot.objects.get(pk=response.json()['id']).fish.count(), 10)
+        payload = self.payload()
+        payload['fish_ids'] = json.dumps(fish_ids)
+        response = self.client.post(reverse('fishing_spots:create'), payload)
+        self.assertEqual(response.status_code, 400)
 
     def test_reject_three_categories(self):
         payload = self.payload()
@@ -100,9 +114,16 @@ class WizardTests(TestCase):
         response = self.client.post(reverse('fishing_spots:create'), payload)
         self.assertEqual(response.status_code, 400)
 
-    def test_reject_less_than_four_screenshots(self):
+    def test_accept_two_screenshots(self):
         payload = self.payload()
-        payload['screenshots'] = [screenshot(i) for i in range(3)]
+        payload['screenshots'] = [screenshot(i) for i in range(2)]
+        response = self.client.post(reverse('fishing_spots:create'), payload)
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(FishingSpotScreenshot.objects.count(), 2)
+
+    def test_reject_less_than_two_screenshots(self):
+        payload = self.payload()
+        payload['screenshots'] = [screenshot(0)]
         response = self.client.post(reverse('fishing_spots:create'), payload)
         self.assertEqual(response.status_code, 400)
 
