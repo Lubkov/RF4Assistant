@@ -65,7 +65,6 @@
 .records-baits-details.records-baits-fit .records-bait-toggle { display: none; }
 .records-baits-details.records-baits-fit .records-bait-preview { overflow: visible; }
 
-.records-baits-details[open] .records-bait-toggle > span:first-child { display: none; }
 .records-baits-details[open] .records-bait-preview { display: none; }
 .records-baits-details[open] .records-baits-summary { justify-content: flex-end; }
 .records-bait-list { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; }

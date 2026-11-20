@@ -64,8 +64,7 @@
 #spot-detail-modal .spot-detail-fish-details:not(.is-measured) .spot-detail-fish-toggle { visibility: hidden; }
 #spot-detail-modal .spot-detail-fish-chevron { font-size: 1.25rem; line-height: 1; }
 #spot-detail-modal .spot-detail-fish-details[open] .spot-detail-fish-summary { justify-content: flex-end; }
-#spot-detail-modal .spot-detail-fish-details[open] .spot-detail-fish-preview,
-#spot-detail-modal .spot-detail-fish-details[open] .spot-detail-fish-toggle > span:first-child { display: none; }
+#spot-detail-modal .spot-detail-fish-details[open] .spot-detail-fish-preview { display: none; }
 #spot-detail-modal .spot-detail-fish-expanded { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .5rem; }
 #spot-detail-modal .spot-detail-fish-details.is-fit .spot-detail-fish-toggle { display: none; }
 #spot-detail-modal .spot-detail-fish-details.is-fit .spot-detail-fish-summary { cursor: default; }
