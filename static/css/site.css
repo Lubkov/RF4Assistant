@@ -26,6 +26,24 @@ body { background-color: var(--bs-body-bg); }
 .waterbody-card:hover { border-color: var(--bs-secondary-color); }
 .waterbody-card:target { outline: 2px solid var(--bs-primary); outline-offset: 3px; }
 .waterbody-card-image { aspect-ratio: 16 / 9; width: 100%; height: auto; object-fit: cover; background: var(--bs-secondary-bg); }
+.waterbody-card-link { display: block; position: relative; }
+.waterbody-card-link:focus-visible { outline: 3px solid var(--bs-primary); outline-offset: -3px; }
+.waterbody-card-link:hover .card-title { text-decoration: underline; }
+.waterbody-card-title { position: absolute; inset: 0 0 auto; background: rgba(0, 0, 0, .7); color: #fff; }
+.waterbody-records-button {
+  --bs-btn-color: var(--bs-body-color);
+  --bs-btn-bg: var(--bs-tertiary-bg);
+  --bs-btn-border-color: var(--bs-border-color);
+  --bs-btn-border-radius: .45rem;
+  --bs-btn-font-size: .83rem;
+  --bs-btn-hover-color: var(--bs-body-color);
+  --bs-btn-hover-bg: var(--bs-secondary-bg);
+  --bs-btn-hover-border-color: var(--bs-secondary-color);
+  --bs-btn-active-color: var(--bs-btn-hover-color);
+  --bs-btn-active-bg: var(--bs-btn-hover-bg);
+  --bs-btn-active-border-color: var(--bs-btn-hover-border-color);
+}
+.waterbody-records-button:focus-visible { outline: 2px solid var(--bs-secondary-color); outline-offset: 2px; }
 .theme-toggle { display: inline-flex; align-items: center; gap: .5rem; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } .waterbody-card { transition: none; } }
 
@@ -49,9 +67,6 @@ body { background-color: var(--bs-body-bg); }
 
 
 /* Waterbody details and CRS.Simple image viewer */
-.waterbody-card-link { display: block; height: 100%; }
-.waterbody-card-link:focus-visible { outline: 3px solid var(--bs-primary); outline-offset: -3px; }
-.waterbody-card-link:hover .card-title { text-decoration: underline; }
 .game-map-container { max-width: 800px; margin-inline: 0; }
 .waterbody-map { width: 100%; aspect-ratio: 1 / 1; background: var(--bs-body-bg); overflow: hidden; }
 .waterbody-map .leaflet-image-layer { image-rendering: auto; }

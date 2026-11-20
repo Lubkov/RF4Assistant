@@ -2,10 +2,9 @@
 {% block title %}Водоёмы — RF4 Assistant{% endblock %}
 {% block content %}
 <section aria-labelledby="waterbodies-title">
-  <div class="mb-4">
-    <h1 class="h2 fw-semibold mb-1" id="waterbodies-title">Водоёмы</h1>
-    <p class="text-body-secondary mb-0">Карты и локации Russian Fishing 4</p>
-  </div>
+  <h1 class="h2 fw-semibold mb-4 d-flex align-items-center gap-2" id="waterbodies-title">
+    {% include 'includes/map_icon.html' with icon_class='heading-icon flex-shrink-0' %}<span>Водоёмы в Russian Fishing 4</span>
+  </h1>
   <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
     {% for waterbody in waterbodies %}
       <div class="col">

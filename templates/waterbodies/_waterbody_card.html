@@ -1,13 +1,25 @@
 {% load versioned_static %}
 <article class="card waterbody-card h-100 overflow-hidden" id="waterbody-{{ waterbody.id }}" aria-label="{{ waterbody.name }}">
-  <a href="{% url 'waterbodies:detail' waterbody.slug %}" class="waterbody-card-link text-decoration-none text-body" aria-label="Открыть карту: {{ waterbody.name }}">
-  {% if waterbody.image %}
-    <img class="card-img-top waterbody-card-image" src="{{ waterbody.image.url }}" alt="{{ waterbody.name }}" loading="lazy" width="1280" height="720">
-  {% else %}
-    <img class="card-img-top waterbody-card-image" src="{% versioned_static 'images/waterbody-placeholder.svg' %}" alt="" loading="lazy" width="1280" height="720">
-  {% endif %}
-  <div class="card-body py-3">
-    <h2 class="card-title h6 mb-0">{{ waterbody.name }}</h2>
-  </div>
+  <a href="{% url 'waterbodies:detail' waterbody.slug %}" class="waterbody-card-link text-decoration-none" aria-label="Открыть карту: {{ waterbody.name }}">
+    {% if waterbody.image %}
+      <img class="card-img-top waterbody-card-image" src="{{ waterbody.image.url }}" alt="" loading="lazy" width="1280" height="720">
+    {% else %}
+      <img class="card-img-top waterbody-card-image" src="{% versioned_static 'images/waterbody-placeholder.svg' %}" alt="" loading="lazy" width="1280" height="720">
+    {% endif %}
+    <h2 class="card-title waterbody-card-title h6 mb-0 px-3 py-2 d-flex align-items-center gap-2">
+      {% include 'includes/map_icon.html' %}<span>{{ waterbody.name }}</span>
+    </h2>
   </a>
+  {% url 'records:weekly' as records_url %}
+  <div class="card-body px-2 py-2">
+    <div class="small text-body-secondary mb-2">Недельные рекорды</div>
+    <div class="d-flex flex-wrap gap-2">
+      <a href="{{ records_url }}?waterbody_id={{ waterbody.pk }}&amp;view=fish" class="btn btn-sm waterbody-records-button d-inline-flex align-items-center gap-1" aria-label="По видам рыб — недельные рекорды: {{ waterbody.name }}">
+        {% include 'includes/records_icon.html' with kind='fish' %}<span>По видам рыб</span>
+      </a>
+      <a href="{{ records_url }}?waterbody_id={{ waterbody.pk }}&amp;view=bait" class="btn btn-sm waterbody-records-button d-inline-flex align-items-center gap-1" aria-label="По наживкам — недельные рекорды: {{ waterbody.name }}">
+        {% include 'includes/records_icon.html' with kind='bait' %}<span>По наживкам</span>
+      </a>
+    </div>
+  </div>
 </article>
