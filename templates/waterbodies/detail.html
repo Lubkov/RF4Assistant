@@ -18,11 +18,11 @@
   <ul class="nav nav-tabs mb-3" id="waterbody-tabs" role="tablist" aria-label="Разделы водоёма">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="waterbody-map-tab" data-bs-toggle="tab" data-bs-target="#waterbody-map-pane"
-              type="button" role="tab" aria-controls="waterbody-map-pane" aria-selected="true">Карта водоёма</button>
+              type="button" role="tab" aria-controls="waterbody-map-pane" aria-selected="true">{% include 'includes/map_icon.html' %}<span>Карта водоёма</span></button>
     </li>
     <li class="nav-item" role="presentation">
       <button class="nav-link" id="waterbody-fishes-tab" data-bs-toggle="tab" data-bs-target="#waterbody-fishes-pane"
-              type="button" role="tab" aria-controls="waterbody-fishes-pane" aria-selected="false">Обитатели водоёма</button>
+              type="button" role="tab" aria-controls="waterbody-fishes-pane" aria-selected="false">{% include 'includes/fish_icon.html' %}<span>Обитатели водоёма</span></button>
     </li>
   </ul>
   <div class="tab-content" id="waterbody-tab-content">

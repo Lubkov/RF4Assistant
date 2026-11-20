@@ -77,6 +77,20 @@ class WaterbodyPagesTests(TestCase):
         self.assertContains(response, "Карта водоёма")
         self.assertContains(response, "Обитатели водоёма")
 
+    def test_waterbody_tab_icons_match_main_menu(self):
+        waterbody = Waterbody.objects.get(pk=1)
+        response = self.client.get(reverse("waterbodies:detail", args=[waterbody.slug]))
+        html = response.content.decode()
+        from django.template.loader import render_to_string
+
+        map_icon = render_to_string("includes/map_icon.html").strip()
+        fish_icon = render_to_string("includes/fish_icon.html").strip()
+        # Each icon appears once in the main menu and once in the corresponding tab.
+        self.assertEqual(html.count(map_icon), 2)
+        self.assertEqual(html.count(fish_icon), 2)
+        self.assertIn('aria-selected="true">' + map_icon + '\n<span>Карта водоёма</span>', html)
+        self.assertIn('aria-selected="false">' + fish_icon + '\n<span>Обитатели водоёма</span>', html)
+
     def test_map_toolbar_and_waterbody_records_link(self):
         waterbody = Waterbody.objects.get(pk=1)
         response = self.client.get(reverse("waterbodies:detail", args=[waterbody.slug]))
