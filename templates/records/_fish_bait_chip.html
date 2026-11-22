@@ -1,0 +1,11 @@
+<span class="records-bait-item" title="{{ bait.bait }} — {{ bait.count }}">
+  {% for component in bait.components %}
+    {% if not forloop.first %}<span>и</span>{% endif %}
+    <button type="button" class="records-bait-trigger" data-record-bait="{{ component.name }}"
+            data-bs-toggle="offcanvas" data-bs-target="#fish-records-panel" aria-controls="fish-records-panel">
+      {% if component.image_url %}<img src="{{ component.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
+      <span>{{ component.name }}</span>
+    </button>
+  {% endfor %}
+  <strong class="records-bait-count">{{ bait.count }}</strong>
+</span>

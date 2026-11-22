@@ -144,18 +144,27 @@
               <button type="button" class="btn btn-link records-fish-trigger p-0 text-start fw-medium"
                       data-bs-toggle="offcanvas" data-bs-target="#fish-records-panel"
                       aria-controls="fish-records-panel">{{ row.fish }}</button>
-              <template data-fish-records data-count="{{ row.record_count }}">
+              <template data-fish-bait-summary>
+                {% for group in row.bait_details %}
+                <tr>
+                  <td class="records-panel-bait">
+                    {% for bait in group.components %}
+                    {% include 'records/_panel_bait.html' %}
+                    {% endfor %}
+                  </td>
+                  <td class="text-end">{{ group.count }}</td>
+                  <td class="text-end text-nowrap">{{ group.average_weight_display }}</td>
+                  <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=group.max_weight_trophy weight=group.weight_display only %}</td>
+                </tr>
+                {% endfor %}
+              </template>
+              <template data-fish-records>
                 {% for catch in row.catches %}
                 <tr data-caught-date="{{ catch.date }}">
                   <td class="text-nowrap">{{ catch.date_display }}</td>
                   <td class="records-panel-bait">
                     {% for bait in catch.baits %}
-                    <div class="records-panel-bait-line d-flex align-items-center gap-1">
-                      {% if bait.image_url %}
-                      <img class="records-bait-icon flex-shrink-0" src="{{ bait.image_url }}" alt="" loading="lazy" width="24" height="24">
-                      {% endif %}
-                      <span class="text-truncate" data-record-truncate>{{ bait.name }}</span>
-                    </div>
+                    {% include 'records/_panel_bait.html' %}
                     {% endfor %}
                   </td>
                   <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=catch.trophy weight=catch.weight_display only %}</td>
@@ -172,13 +181,9 @@
             {% if row.bait_details|length > 1 %}
             <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">
               <summary class="records-baits-summary" aria-label="Наживки для {{ row.fish }}: развернуть или свернуть полный список">
-                <span class="records-bait-preview" aria-hidden="true">
+                <span class="records-bait-preview">
                   {% for bait in row.bait_details %}
-                  <span class="records-bait-item" title="{{ bait.bait }} — {{ bait.count }}">
-                    {% for icon_url in bait.images %}{% if icon_url %}<img src="{{ icon_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}{% endfor %}
-                    <span>{{ bait.bait }}</span>
-                    <strong class="records-bait-count">{{ bait.count }}</strong>
-                  </span>
+                  {% include 'records/_fish_bait_chip.html' %}
                   {% endfor %}
                 </span>
                 <span class="records-bait-toggle text-body-secondary small text-nowrap">
@@ -187,22 +192,14 @@
               </summary>
               <div class="records-bait-list records-bait-list-expanded">
                 {% for bait in row.bait_details %}
-                <span class="records-bait-item" title="{{ bait.bait }} — {{ bait.count }}">
-                  {% for icon_url in bait.images %}{% if icon_url %}<img src="{{ icon_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}{% endfor %}
-                  <span>{{ bait.bait }}</span>
-                  <strong class="records-bait-count">{{ bait.count }}</strong>
-                </span>
+                {% include 'records/_fish_bait_chip.html' %}
                 {% endfor %}
               </div>
             </details>
             {% else %}
             <div class="records-bait-list records-bait-single">
               {% for bait in row.bait_details %}
-              <span class="records-bait-item" title="{{ bait.bait }} — {{ bait.count }}">
-                {% for icon_url in bait.images %}{% if icon_url %}<img src="{{ icon_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}{% endfor %}
-                <span>{{ bait.bait }}</span>
-                <strong class="records-bait-count">{{ bait.count }}</strong>
-              </span>
+              {% include 'records/_fish_bait_chip.html' %}
               {% empty %}<span class="text-body-secondary">—</span>{% endfor %}
             </div>
             {% endif %}
@@ -226,12 +223,26 @@
   <div class="offcanvas-header">
     <div>
       <h2 class="offcanvas-title h5" id="fish-records-title"></h2>
-      <div class="small text-body-secondary" id="fish-records-count"></div>
+      <div class="small text-body-secondary" id="fish-records-count" aria-live="polite"></div>
+      <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="fish-records-bait-filter" hidden>
+        <span></span> <span aria-hidden="true">×</span>
+      </button>
     </div>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
   </div>
   <div class="offcanvas-body pt-0" tabindex="0" role="region" aria-label="Таблица рекордов">
-    <table class="table table-hover align-middle">
+    <table class="table table-hover align-middle" id="fish-records-summary">
+      <thead class="sticky-top">
+        <tr>
+          <th scope="col" class="records-panel-bait">Приманка</th>
+          <th scope="col" class="records-panel-count text-end">Кол.</th>
+          <th scope="col" class="records-panel-average text-end text-nowrap">Avg</th>
+          <th scope="col" class="records-panel-weight text-end text-nowrap">Max</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <table class="table table-hover align-middle" id="fish-records-details" hidden>
       <thead class="sticky-top">
         <tr>
           <th scope="col" class="records-panel-date"><button type="button" class="btn btn-link records-panel-sort p-0" id="fish-records-date">Дата</button></th>

@@ -7,45 +7,90 @@
   const count = panel.querySelector("#fish-records-count");
   const date = panel.querySelector("#fish-records-date");
   const weight = panel.querySelector("#fish-records-weight");
-  const body = panel.querySelector("tbody");
+  const filter = panel.querySelector("#fish-records-bait-filter");
+  const summary = panel.querySelector("#fish-records-summary");
+  const details = panel.querySelector("#fish-records-details");
+  const summaryBody = summary.tBodies[0];
+  const detailsBody = details.tBodies[0];
   const scrollArea = panel.querySelector(".offcanvas-body");
   let rows = [];
   let selectedRow;
+  let selectedBait;
+  let sortButton = weight;
 
-  const showRows = (sortButton, sortedRows) => {
+  const showRows = () => {
+    const showSummary = selectedBait === undefined;
+    summary.hidden = !showSummary;
+    details.hidden = showSummary;
+    scrollArea.scrollTop = 0;
+    if (showSummary) {
+      count.textContent = `Записей: ${rows.length}`;
+      return;
+    }
+
     for (const button of [date, weight]) {
       button.closest("th").removeAttribute("aria-sort");
     }
     sortButton.closest("th").setAttribute("aria-sort", "descending");
-    body.replaceChildren(...sortedRows);
-    scrollArea.scrollTop = 0;
+    const visibleRows = rows.filter((row) =>
+      [...row.querySelectorAll("[data-record-bait]")].some((bait) =>
+        bait.dataset.recordBait === selectedBait));
+    if (sortButton === date) {
+      visibleRows.sort((first, second) =>
+        second.dataset.caughtDate.localeCompare(first.dataset.caughtDate));
+    }
+    detailsBody.replaceChildren(...visibleRows);
+    count.textContent = `Записей: ${visibleRows.length}`;
+  };
+
+  const filterByBait = (bait) => {
+    selectedBait = bait;
+    filter.hidden = bait === undefined;
+    filter.firstElementChild.textContent = bait ?? "";
+    filter.setAttribute("aria-label", `Снять фильтр по приманке «${bait ?? ""}»`);
+    showRows();
   };
 
   panel.addEventListener("show.bs.offcanvas", (event) => {
     const trigger = event.relatedTarget;
-    const records = trigger?.parentElement.querySelector("[data-fish-records]");
+    const row = trigger?.closest("tr");
+    const records = row?.querySelector("[data-fish-records]");
     if (!records) return;
 
-    selectedRow = trigger.closest("tr");
+    selectedRow = row;
     selectedRow.classList.add("table-active");
-    title.textContent = trigger.textContent.trim();
-    count.textContent = `Записей: ${records.dataset.count}`;
+    title.textContent = row.querySelector(".records-fish-trigger").textContent.trim();
+    summaryBody.replaceChildren(row.querySelector("[data-fish-bait-summary]").content.cloneNode(true));
+    detailsBody.replaceChildren();
     rows = [...records.content.cloneNode(true).querySelectorAll("tr")];
-    showRows(weight, rows);
+    sortButton = weight;
+    filterByBait(trigger.dataset.recordBait);
   });
 
   panel.addEventListener("hidden.bs.offcanvas", () => {
     selectedRow?.classList.remove("table-active");
   });
 
-  date.addEventListener("click", () => {
-    const byDate = [...rows].sort((first, second) =>
-      second.dataset.caughtDate.localeCompare(first.dataset.caughtDate));
-    showRows(date, byDate);
-  });
-  weight.addEventListener("click", () => showRows(weight, rows));
+  for (const button of [date, weight]) {
+    button.addEventListener("click", () => {
+      sortButton = button;
+      showRows();
+    });
+  }
 
-  body.addEventListener("mouseover", (event) => {
+  filter.addEventListener("click", () => {
+    filterByBait(undefined);
+    scrollArea.focus();
+  });
+  scrollArea.addEventListener("click", (event) => {
+    const bait = event.target.closest("[data-record-bait]");
+    if (!bait) return;
+
+    filterByBait(bait.dataset.recordBait);
+    filter.focus();
+  });
+
+  scrollArea.addEventListener("mouseover", (event) => {
     const label = event.target.closest("[data-record-truncate]");
     if (!label) return;
 
@@ -163,6 +208,7 @@
     }
 
     summary.addEventListener("click", (event) => {
+      if (event.target.closest("[data-record-bait]")) return;
       // Chips sit inside <summary> when collapsed. Prevent the native
       // <details> toggle without treating a chip click as a disclosure.
       if (event.target.closest(".records-bait-item")) {

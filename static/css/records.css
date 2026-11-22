@@ -34,6 +34,21 @@
 .records-fish-panel .offcanvas-body { overscroll-behavior: contain; }
 .records-fish-panel .table { table-layout: fixed; min-width: 18rem; }
 .records-panel-bait-line + .records-panel-bait-line { margin-top: .25rem; }
+.records-panel-bait-line { max-width: 100%; }
+.records-bait-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+.records-bait-trigger:hover { color: var(--bs-link-hover-color); }
+.records-bait-trigger:focus-visible { outline: 2px solid var(--bs-primary); }
+#fish-records-bait-filter { overflow-wrap: anywhere; text-align: start; }
 .records-panel-sort {
   --bs-btn-color: currentColor;
   font-weight: inherit;
@@ -41,6 +56,8 @@
 }
 .records-panel-date { width: 6rem; }
 .records-panel-weight { width: 7.5rem; }
+.records-panel-count { width: 4rem; }
+.records-panel-average { width: 6.75rem; }
 .records-panel-player { width: 25%; }
 .records-fish-panel .table > :not(caption) > * > .records-panel-bait { padding-inline-start: .75rem; }
 @media (max-width: 479.98px) {
@@ -48,6 +65,9 @@
   .records-panel-sort { font-size: inherit; }
   .records-panel-date { width: 4.75rem; }
   .records-panel-weight { width: 6.25rem; }
+  .records-panel-count { width: 3.25rem; }
+  .records-panel-average { width: 5.75rem; }
+  #fish-records-summary th { padding-inline: .25rem; }
 }
 .records-icon-placeholder { display: inline-flex; justify-content: center; align-items: center; font-size: 1.15rem; }
 .records-baits-cell { min-width: 0; cursor: pointer; }
