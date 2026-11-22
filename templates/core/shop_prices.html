@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Цены в магазинах в Russian Fishing 4 — RF4 Assistant{% endblock %}
+
+{% block content %}
+<h1 id="shop-prices-heading" class="h2 mb-3 d-flex align-items-center gap-2">
+  {% include 'includes/shop_prices_icon.html' with icon_class='heading-icon flex-shrink-0' %}
+  <span>Цены в магазинах в Russian Fishing 4</span>
+</h1>
+
+<p class="text-body-secondary mb-4">
+  Цены указаны в процентах от базовой цены, которая принята за 100%.
+  На рыбном рынке чем выше процент, тем больше вы получите за рыбу.
+  В магазинах и мастерских чем ниже процент, тем дешевле покупки и услуги.
+</p>
+
+<div class="table-responsive" role="region" aria-labelledby="shop-prices-heading" tabindex="0">
+  <table class="table table-striped table-hover align-middle">
+    <thead>
+      <tr class="align-bottom">
+        <th scope="col">Водоём</th>
+        <th scope="col" class="text-end">Рыбный рынок</th>
+        <th scope="col" class="text-end">Рыболовный магазин</th>
+        <th scope="col" class="text-end">Мастерская</th>
+        <th scope="col" class="text-end">Промтовары</th>
+        <th scope="col" class="text-end">Продуктовый</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for waterbody, prices in shop_prices %}
+        <tr>
+          <th scope="row">{{ waterbody }}</th>
+          {% for price in prices %}
+            <td class="text-end{% if price is None %} text-body-secondary{% endif %}">{% if price is None %}—{% else %}{{ price }}%{% endif %}</td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<section class="mt-4" aria-labelledby="branded-shops-heading">
+  <h2 id="branded-shops-heading" class="h4 mb-3 d-flex align-items-center gap-2">
+    <svg class="heading-icon flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10v10h16V10M3 10l2-6h14l2 6M3 10h18M9 20v-6h6v6"/></svg>
+    <span>Фирменные магазины и мастерские</span>
+  </h2>
+  <div class="table-responsive" role="region" aria-labelledby="branded-shops-heading" tabindex="0">
+    <table class="table table-striped table-hover align-middle">
+      <thead>
+        <tr class="align-bottom">
+          <th scope="col">Магазин</th>
+          <th scope="col">Водоём</th>
+          <th scope="col" class="text-end">Рыболовный магазин</th>
+          <th scope="col" class="text-end">Мастерская</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Фирменный магазин Zeiman</th>
+          <td>оз. Янтарное</td>
+          <td class="text-end">100%</td>
+          <td class="text-end">81%</td>
+        </tr>
+        <tr>
+          <th scope="row">Фирменный магазин Beluga</th>
+          <td>Ладожское оз.</td>
+          <td class="text-end">100%</td>
+          <td class="text-end">81%</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-body-secondary">
+    В фирменных рыболовных магазинах продаются только товары соответствующего бренда.
+    В фирменных мастерских ремонтируют катушки и снасти этого бренда, используя только оригинальные комплектующие.
+  </p>
+</section>
+{% endblock %}

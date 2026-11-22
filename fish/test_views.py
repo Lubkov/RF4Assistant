@@ -22,8 +22,8 @@ class FishListPageTests(TestCase):
     def test_fish_navigation_link(self):
         response = self.client.get(reverse("fish:list"))
         self.assertContains(response, 'href="/fish/"')
-        self.assertContains(response, 'Справочник</button>')
-        self.assertContains(response, 'Виды рыб</a>')
+        self.assertContains(response, '<span>Справочники</span>')
+        self.assertContains(response, '<span>Виды рыб</span>')
 
     def test_fish_icons_and_rarity_icons_are_in_the_correct_columns(self):
         with_icon = Fish.objects.create(name="С иконкой", trophy_weight=1000, rarity=2)

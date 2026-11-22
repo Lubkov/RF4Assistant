@@ -30,6 +30,46 @@ class HomePageTests(TestCase):
         self.assertContains(response, '/media/waterbodies/test.webp')
 
 
+class ShopPricesTests(TestCase):
+    def test_shop_prices_page_and_navigation(self):
+        from bs4 import BeautifulSoup
+
+        url = reverse("core:shop_prices")
+        home = BeautifulSoup(self.client.get(reverse("core:home")).content, "html.parser")
+        link = home.select_one(f'nav a[href="{url}"]')
+        self.assertEqual(link.get_text(strip=True), "Цены в магазинах")
+        self.assertIsNotNone(link.find("svg"))
+
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        page = BeautifulSoup(response.content, "html.parser")
+        self.assertIsNotNone(page.select_one(f'nav a[href="{url}"][aria-current="page"]'))
+        main_table, branded_table = page.select("main table")
+        headings = [cell.get_text(strip=True) for cell in main_table.select("thead th")]
+        self.assertEqual(len(headings), 6)
+        self.assertNotIn("Фирменный магазин", headings)
+        self.assertNotIn("Фирменная мастерская", headings)
+        rows = main_table.select("tbody tr")
+        self.assertEqual(len(rows), 18)
+        self.assertCountEqual(
+            [row.th.get_text(strip=True) for row in rows],
+            [label.get_text(strip=True) for label in page.select(".map-dropdown a span")],
+        )
+        self.assertTrue(all(len(row.select("td")) == 5 for row in rows))
+        for row in rows:
+            for cell in row.select("td"):
+                self.assertRegex(cell.get_text(strip=True), r"^(?:\d+%|—)$")
+        self.assertEqual(rows[0].get_text(" ", strip=True), "оз. Комариное 100% 100% 100% 100% 90%")
+        self.assertEqual(rows[-1].get_text(" ", strip=True), "Норвежское море 120% 100% 150% 116% 200%")
+        self.assertEqual(
+            [row.get_text(" ", strip=True) for row in branded_table.select("tbody tr")],
+            [
+                "Фирменный магазин Zeiman оз. Янтарное 100% 81%",
+                "Фирменный магазин Beluga Ладожское оз. 100% 81%",
+            ],
+        )
+
+
 class MapDropdownTests(TestCase):
     def test_waterbody_menu_shows_access_levels(self):
         Waterbody.objects.create(name='Тестовое озеро', slug='test-lake', level=7)
