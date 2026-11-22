@@ -26,6 +26,7 @@
 .records-table th:nth-child(4) { width: 15%; }
 .records-table th:nth-child(5) { width: 39%; }
 .records-count-column { font-variant-numeric: tabular-nums; vertical-align: middle; }
+.records-trophy-icon { width: 1.125rem; height: 1.125rem; vertical-align: -.2em; }
 .records-fish-icon { width: 36px; height: 36px; object-fit: contain; flex: 0 0 36px; }
 .records-icon-placeholder { display: inline-flex; justify-content: center; align-items: center; font-size: 1.15rem; }
 .records-baits-cell { min-width: 0; cursor: pointer; }

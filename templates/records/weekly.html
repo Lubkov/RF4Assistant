@@ -97,7 +97,7 @@
           </td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
           <td class="text-center text-nowrap">{{ row.average_weight_display }}</td>
-          <td class="text-center text-nowrap">{{ row.weight_display }}</td>
+          {% include 'records/_maximum_weight.html' %}
           <td class="records-baits-cell">
             {% if row.fish_details|length > 1 %}
             <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">
@@ -146,7 +146,7 @@
           </td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
           <td class="text-center text-nowrap">{{ row.average_weight_display }}</td>
-          <td class="text-center text-nowrap">{{ row.weight_display }}</td>
+          {% include 'records/_maximum_weight.html' %}
           <td class="records-baits-cell">
             {% if row.bait_details|length > 1 %}
             <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">

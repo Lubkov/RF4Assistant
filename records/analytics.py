@@ -21,6 +21,26 @@ def format_weight(weight_g):
     return f"{weight_g / 1000:,.3f}".replace(",", " ") + " кг" if weight_g >= 1000 else f"{weight_g} г"
 
 
+def update_max_weight(row, catch):
+    weight = catch["weight_g"]
+    if weight < row["max_weight_g"]:
+        return
+
+    trophy_weight = catch["fish__trophy_weight"]
+    rare_weight = catch["fish__super_trophy_weight"]
+    tier = 0 if trophy_weight is not None else -1
+    if rare_weight is not None and weight >= rare_weight:
+        tier = 2
+    elif trophy_weight is not None and weight >= trophy_weight:
+        tier = 1
+
+    # A bait row can contain equally heavy catches of different species.
+    if weight == row["max_weight_g"]:
+        tier = max(tier, row["max_weight_trophy"])
+    row["max_weight_g"] = weight
+    row["max_weight_trophy"] = tier
+
+
 def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL", sort="count"):
     if isinstance(date_from, str):
         date_from = date.fromisoformat(date_from)
@@ -51,6 +71,7 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
     values = (
         "waterbody_id", "waterbody_name", "fish_id", "fish_name", "weight_g",
         "bait", "bait1_id", "bait2_id",
+        "fish__trophy_weight", "fish__super_trophy_weight",
     )
     for catch in qs.values(*values).iterator():
         key = (
@@ -63,6 +84,7 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
             "fish_id": catch["fish_id"],
             "fish": catch["fish_name"],
             "max_weight_g": 0,
+            "max_weight_trophy": -1,
             "total_weight_g": 0,
             "record_count": 0,
             "baits": Counter(),
@@ -70,7 +92,7 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
         })
         row["record_count"] += 1
         row["total_weight_g"] += catch["weight_g"]
-        row["max_weight_g"] = max(row["max_weight_g"], catch["weight_g"])
+        update_max_weight(row, catch)
         components = [part.strip() for part in (catch["bait"] or "").split(";") if part.strip()]
         bait_label = " и ".join(components) if components else "(не указана)"
         row["baits"][bait_label] += 1
@@ -182,6 +204,7 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
     fields = (
         "waterbody_id", "waterbody_name", "fish_id", "fish_name",
         "weight_g", "bait", "bait1_id", "bait2_id",
+        "fish__trophy_weight", "fish__super_trophy_weight",
     )
     for catch in qs.values(*fields).iterator():
         components = [v.strip() for v in (catch["bait"] or "").split(";") if v.strip()]
@@ -191,11 +214,12 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
         row = groups.setdefault(group_key, {
             "waterbody_id": catch["waterbody_id"], "waterbody": catch["waterbody_name"],
             "bait": bait_name, "bait_ids": (None, None),
-            "max_weight_g": 0, "total_weight_g": 0, "record_count": 0, "fishes": {},
+            "max_weight_g": 0, "max_weight_trophy": -1,
+            "total_weight_g": 0, "record_count": 0, "fishes": {},
         })
         row["record_count"] += 1
         row["total_weight_g"] += catch["weight_g"]
-        row["max_weight_g"] = max(row["max_weight_g"], catch["weight_g"])
+        update_max_weight(row, catch)
         if not any(row["bait_ids"]):
             row["bait_ids"] = (catch["bait1_id"], catch["bait2_id"])
         fish_key = ("id", catch["fish_id"]) if catch["fish_id"] is not None else ("name", catch["fish_name"])
