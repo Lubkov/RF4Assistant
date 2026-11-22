@@ -141,7 +141,28 @@
             <div class="d-flex align-items-center gap-2 records-fish-cell">
               {% if row.fish_image_url %}<img class="records-fish-icon" src="{{ row.fish_image_url }}" alt="" loading="lazy" width="36" height="36">
               {% else %}<span class="records-fish-icon records-icon-placeholder" aria-hidden="true">🐟</span>{% endif %}
-              <span class="fw-medium">{{ row.fish }}</span>
+              <button type="button" class="btn btn-link records-fish-trigger p-0 text-start fw-medium"
+                      data-bs-toggle="offcanvas" data-bs-target="#fish-records-panel"
+                      aria-controls="fish-records-panel">{{ row.fish }}</button>
+              <template data-fish-records data-count="{{ row.record_count }}">
+                {% for catch in row.catches %}
+                <tr data-caught-date="{{ catch.date }}">
+                  <td class="text-nowrap">{{ catch.date_display }}</td>
+                  <td class="records-panel-bait">
+                    {% for bait in catch.baits %}
+                    <div class="records-panel-bait-line d-flex align-items-center gap-1">
+                      {% if bait.image_url %}
+                      <img class="records-bait-icon flex-shrink-0" src="{{ bait.image_url }}" alt="" loading="lazy" width="24" height="24">
+                      {% endif %}
+                      <span class="text-truncate" data-record-truncate>{{ bait.name }}</span>
+                    </div>
+                    {% endfor %}
+                  </td>
+                  <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=catch.trophy weight=catch.weight_display only %}</td>
+                  <td class="text-end"><span class="d-block text-truncate" data-record-truncate>{{ catch.player }}</span></td>
+                </tr>
+                {% endfor %}
+              </template>
             </div>
           </td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
@@ -199,6 +220,31 @@
   <p class="text-body-secondary mb-0">Попробуй выбрать другой период, регион или водоём.</p>
 </div></div>
 {% endfor %}
+{% if selected_view == "fish" and data.rows %}
+<aside class="offcanvas offcanvas-end records-fish-panel" tabindex="-1" id="fish-records-panel"
+       aria-labelledby="fish-records-title">
+  <div class="offcanvas-header">
+    <div>
+      <h2 class="offcanvas-title h5" id="fish-records-title"></h2>
+      <div class="small text-body-secondary" id="fish-records-count"></div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+  </div>
+  <div class="offcanvas-body pt-0" tabindex="0" role="region" aria-label="Таблица рекордов">
+    <table class="table table-hover align-middle">
+      <thead class="sticky-top">
+        <tr>
+          <th scope="col" class="records-panel-date"><button type="button" class="btn btn-link records-panel-sort p-0" id="fish-records-date">Дата</button></th>
+          <th scope="col" class="records-panel-bait">Приманка</th>
+          <th scope="col" class="records-panel-weight text-end" aria-sort="descending"><button type="button" class="btn btn-link records-panel-sort p-0" id="fish-records-weight">Вес</button></th>
+          <th scope="col" class="records-panel-player text-end">Ник игрока</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</aside>
+{% endif %}
 <p class="small text-body-secondary mt-3 mb-0">Данные получены с официального сайта Russian Fishing 4 (<a href="https://rf4game.ru/" target="_blank" rel="noopener noreferrer">rf4game.ru</a>).</p>
 {% endblock %}
 {% block extra_js %}<script src="{% versioned_static 'js/records.js' %}" defer></script>{% endblock %}

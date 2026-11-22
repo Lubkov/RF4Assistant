@@ -1,5 +1,63 @@
 "use strict";
 (() => {
+  const panel = document.getElementById("fish-records-panel");
+  if (!panel) return;
+
+  const title = panel.querySelector("#fish-records-title");
+  const count = panel.querySelector("#fish-records-count");
+  const date = panel.querySelector("#fish-records-date");
+  const weight = panel.querySelector("#fish-records-weight");
+  const body = panel.querySelector("tbody");
+  const scrollArea = panel.querySelector(".offcanvas-body");
+  let rows = [];
+  let selectedRow;
+
+  const showRows = (sortButton, sortedRows) => {
+    for (const button of [date, weight]) {
+      button.closest("th").removeAttribute("aria-sort");
+    }
+    sortButton.closest("th").setAttribute("aria-sort", "descending");
+    body.replaceChildren(...sortedRows);
+    scrollArea.scrollTop = 0;
+  };
+
+  panel.addEventListener("show.bs.offcanvas", (event) => {
+    const trigger = event.relatedTarget;
+    const records = trigger?.parentElement.querySelector("[data-fish-records]");
+    if (!records) return;
+
+    selectedRow = trigger.closest("tr");
+    selectedRow.classList.add("table-active");
+    title.textContent = trigger.textContent.trim();
+    count.textContent = `Записей: ${records.dataset.count}`;
+    rows = [...records.content.cloneNode(true).querySelectorAll("tr")];
+    showRows(weight, rows);
+  });
+
+  panel.addEventListener("hidden.bs.offcanvas", () => {
+    selectedRow?.classList.remove("table-active");
+  });
+
+  date.addEventListener("click", () => {
+    const byDate = [...rows].sort((first, second) =>
+      second.dataset.caughtDate.localeCompare(first.dataset.caughtDate));
+    showRows(date, byDate);
+  });
+  weight.addEventListener("click", () => showRows(weight, rows));
+
+  body.addEventListener("mouseover", (event) => {
+    const label = event.target.closest("[data-record-truncate]");
+    if (!label) return;
+
+    if (label.scrollWidth > label.clientWidth) {
+      label.title = label.textContent.trim();
+    } else {
+      label.removeAttribute("title");
+    }
+  });
+})();
+
+(() => {
   const form = document.getElementById("records-filter-form");
   const daysInput = document.getElementById("records_days");
   if (!form || !daysInput) return;

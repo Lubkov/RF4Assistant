@@ -1,11 +1,3 @@
-{% load versioned_static %}
 <td class="text-center text-nowrap">
-  {% if row.max_weight_trophy == 2 %}
-    <img class="records-trophy-icon" src="{% versioned_static 'images/rare-trophy.svg' %}" alt="Редкий трофей">
-  {% elif row.max_weight_trophy == 1 %}
-    <img class="records-trophy-icon" src="{% versioned_static 'images/trophy.svg' %}" alt="Трофей">
-  {% elif row.max_weight_trophy == 0 %}
-    <img class="records-trophy-icon" src="{% versioned_static 'images/common-catch.svg' %}" alt="Обычный улов">
-  {% endif %}
-  {{ row.weight_display }}
+  {% include 'records/_weight.html' with trophy=row.max_weight_trophy weight=row.weight_display only %}
 </td>

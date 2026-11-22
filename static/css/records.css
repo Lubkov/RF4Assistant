@@ -28,6 +28,27 @@
 .records-count-column { font-variant-numeric: tabular-nums; vertical-align: middle; }
 .records-trophy-icon { width: 1.125rem; height: 1.125rem; vertical-align: -.2em; }
 .records-fish-icon { width: 36px; height: 36px; object-fit: contain; flex: 0 0 36px; }
+.records-fish-trigger { --bs-btn-color: var(--bs-body-color); }
+.records-fish-trigger:not(:hover) { text-decoration: none; }
+.records-fish-panel { --bs-offcanvas-width: min(100vw, 40rem); }
+.records-fish-panel .offcanvas-body { overscroll-behavior: contain; }
+.records-fish-panel .table { table-layout: fixed; min-width: 18rem; }
+.records-panel-bait-line + .records-panel-bait-line { margin-top: .25rem; }
+.records-panel-sort {
+  --bs-btn-color: currentColor;
+  font-weight: inherit;
+  text-decoration: none;
+}
+.records-panel-date { width: 6rem; }
+.records-panel-weight { width: 7.5rem; }
+.records-panel-player { width: 25%; }
+.records-fish-panel .table > :not(caption) > * > .records-panel-bait { padding-inline-start: .75rem; }
+@media (max-width: 479.98px) {
+  .records-fish-panel .table { font-size: .8125rem; }
+  .records-panel-sort { font-size: inherit; }
+  .records-panel-date { width: 4.75rem; }
+  .records-panel-weight { width: 6.25rem; }
+}
 .records-icon-placeholder { display: inline-flex; justify-content: center; align-items: center; font-size: 1.15rem; }
 .records-baits-cell { min-width: 0; cursor: pointer; }
 .records-baits-cell:has(.records-baits-fit), .records-baits-cell:has(.records-bait-single) { cursor: default; }
