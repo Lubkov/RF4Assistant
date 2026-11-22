@@ -1,20 +1,18 @@
 {% extends 'base.html' %}
 {% load versioned_static l10n %}
 {% block title %}{{ waterbody.name }} — RF4 Assistant{% endblock %}
+{% block main_spacing %}pt-3 pb-4 pb-lg-5{% endblock %}
 {% block extra_css %}
   {% if game_map %}<link href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet">{% endif %}
 {% endblock %}
 {% block content %}
 <section aria-labelledby="waterbody-title">
-  <nav aria-label="Навигационная цепочка">
-    <ol class="breadcrumb mb-3">
-      <li class="breadcrumb-item"><a href="{% url 'core:home' %}">Водоёмы</a></li>
-      <li class="breadcrumb-item active" aria-current="page">{{ waterbody.name }}</li>
-    </ol>
-  </nav>
   <h1 id="waterbody-title" class="h2 fw-semibold mb-4 d-flex align-items-baseline flex-wrap gap-3">
     <span>{{ waterbody.name }}</span><small class="waterbody-level text-body-secondary fw-normal">{{ waterbody.level }} ур.</small>
   </h1>
+  {% if waterbody.description %}
+    <div class="mb-4">{{ waterbody.description|linebreaks }}</div>
+  {% endif %}
   <ul class="nav nav-tabs mb-3" id="waterbody-tabs" role="tablist" aria-label="Разделы водоёма">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="waterbody-map-tab" data-bs-toggle="tab" data-bs-target="#waterbody-map-pane"
@@ -35,7 +33,7 @@
           <button type="button" id="map-reset" class="btn btn-outline-secondary map-toolbar-icon" aria-label="Сбросить масштаб" title="Сбросить масштаб"><span class="map-reset-symbol" aria-hidden="true">○</span></button>
           <button type="button" id="map-zoom-out" class="btn btn-outline-secondary map-toolbar-icon" aria-label="Уменьшить карту" title="Уменьшить карту">−</button>
         </div>
-        <a class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2" href="{% url 'records:weekly' %}?waterbody_id={{ waterbody.pk }}">{% include 'includes/records_icon.html' with kind='records' %}<span>Рекорды водоёма</span></a>
+        <a class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2" href="{% url 'records:weekly' %}?waterbody_id={{ waterbody.pk }}">{% include 'includes/records_icon.html' with kind='records' %}<span>Рекорды водоёма</span></a>
       </div>
       <div id="waterbody-map" class="waterbody-map border rounded"
            data-image-url="{{ game_map.image.url }}"
