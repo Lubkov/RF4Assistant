@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils import timezone
 
-from .analytics import bait_report
+from .analytics import bait_report, report
 from .services import import_weekly
 
 
@@ -14,7 +14,7 @@ class BaitViewTests(TestCase):
             {"fish": "Вьюн", "waterbody": "р. Сура", "weight_g": 283,
              "player": "p1", "caught_date": "2026-11-11", "bait": "Мотыль; Опарыш", "rank": 1},
             {"fish": "Вьюн", "waterbody": "р. Сура", "weight_g": 270,
-             "player": "p2", "caught_date": "2026-11-11", "bait": "Мотыль; Опарыш", "rank": 2},
+             "player": "p2", "caught_date": "2026-11-11", "bait": "Опарыш; Мотыль", "rank": 2},
             {"fish": "Ерш", "waterbody": "р. Сура", "weight_g": 120,
              "player": "p3", "caught_date": "2026-11-11", "bait": "Мотыль; Опарыш", "rank": 1},
             {"fish": "Вьюн", "waterbody": "р. Сура", "weight_g": 220,
@@ -42,6 +42,14 @@ class BaitViewTests(TestCase):
         import_weekly(gl)
         data = bait_report(date_from="2026-11-11", date_to="2026-11-11", region="ALL")
         self.assertEqual(data["total_unique_catches"], 4)
+
+    def test_fish_report_groups_reversed_combination(self):
+        data = report(date_from="2026-11-11", date_to="2026-11-11")
+        row = next(row for row in data["rows"] if row["fish"] == "Вьюн")
+        self.assertEqual(row["baits"], [
+            {"bait": "Мотыль и Опарыш", "count": 2},
+            {"bait": "Мотыль", "count": 1},
+        ])
 
     def test_view_tabs_and_preserved_filters(self):
         from datetime import date

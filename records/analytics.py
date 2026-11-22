@@ -16,6 +16,16 @@ SORT_OPTIONS = (
 )
 
 
+def _bait_combination(catch):
+    names = [part.strip() for part in (catch["bait"] or "").split(";") if part.strip()]
+    ids = (catch["bait1_id"], catch["bait2_id"])
+    indices = sorted(range(len(names)), key=names.__getitem__)
+    return (
+        tuple(names[index] for index in indices) or ("(не указана)",),
+        tuple(ids[index] if index < len(ids) else None for index in indices),
+    )
+
+
 def format_weight(weight_g):
     """Human-readable weight with no loss of gram precision."""
     return f"{weight_g / 1000:,.3f}".replace(",", " ") + " кг" if weight_g >= 1000 else f"{weight_g} г"
@@ -97,9 +107,7 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
         row["total_weight_g"] += catch["weight_g"]
         tier = trophy_tier(catch)
         update_max_weight(row, catch, tier)
-        components = [part.strip() for part in (catch["bait"] or "").split(";") if part.strip()]
-        bait_names = tuple(components) or ("(не указана)",)
-        ids = (catch["bait1_id"], catch["bait2_id"])
+        bait_names, ids = _bait_combination(catch)
         row["catches"].append({
             "date": catch["caught_date"].isoformat(),
             "date_display": catch["caught_date"].strftime("%d.%m.%Y"),
@@ -241,13 +249,12 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
         "fish__trophy_weight", "fish__super_trophy_weight",
     )
     for catch in qs.values(*fields).iterator():
-        components = [v.strip() for v in (catch["bait"] or "").split(";") if v.strip()]
-        bait_name = " и ".join(components) if components else "(не указана)"
+        bait_names, ids = _bait_combination(catch)
         wb_key = ("id", catch["waterbody_id"]) if catch["waterbody_id"] is not None else ("name", catch["waterbody_name"])
-        group_key = (wb_key, bait_name)
+        group_key = (wb_key, bait_names)
         row = groups.setdefault(group_key, {
             "waterbody_id": catch["waterbody_id"], "waterbody": catch["waterbody_name"],
-            "bait": bait_name, "bait_ids": (None, None),
+            "bait": " и ".join(bait_names), "bait_ids": (None, None),
             "max_weight_g": 0, "max_weight_trophy": -1,
             "total_weight_g": 0, "record_count": 0, "fishes": {},
         })
@@ -255,7 +262,7 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
         row["total_weight_g"] += catch["weight_g"]
         update_max_weight(row, catch, trophy_tier(catch))
         if not any(row["bait_ids"]):
-            row["bait_ids"] = (catch["bait1_id"], catch["bait2_id"])
+            row["bait_ids"] = ids
         fish_key = ("id", catch["fish_id"]) if catch["fish_id"] is not None else ("name", catch["fish_name"])
         fish = row["fishes"].setdefault(fish_key, {
             "fish_id": catch["fish_id"], "fish": catch["fish_name"], "count": 0,
