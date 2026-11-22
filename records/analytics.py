@@ -63,11 +63,13 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
             "fish_id": catch["fish_id"],
             "fish": catch["fish_name"],
             "max_weight_g": 0,
+            "total_weight_g": 0,
             "record_count": 0,
             "baits": Counter(),
             "bait_icons": {},
         })
         row["record_count"] += 1
+        row["total_weight_g"] += catch["weight_g"]
         row["max_weight_g"] = max(row["max_weight_g"], catch["weight_g"])
         components = [part.strip() for part in (catch["bait"] or "").split(";") if part.strip()]
         bait_label = " и ".join(components) if components else "(не указана)"
@@ -103,6 +105,7 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
     for item in groups.values():
         item["fish_image_url"] = image_url(fish_images.get(item["fish_id"]))
         item["weight_display"] = format_weight(item["max_weight_g"])
+        item["average_weight_display"] = format_weight(round(item["total_weight_g"] / item["record_count"]))
         item["bait_details"] = [
             {
                 "bait": name,
@@ -188,9 +191,10 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
         row = groups.setdefault(group_key, {
             "waterbody_id": catch["waterbody_id"], "waterbody": catch["waterbody_name"],
             "bait": bait_name, "bait_ids": (None, None),
-            "max_weight_g": 0, "record_count": 0, "fishes": {},
+            "max_weight_g": 0, "total_weight_g": 0, "record_count": 0, "fishes": {},
         })
         row["record_count"] += 1
+        row["total_weight_g"] += catch["weight_g"]
         row["max_weight_g"] = max(row["max_weight_g"], catch["weight_g"])
         if not any(row["bait_ids"]):
             row["bait_ids"] = (catch["bait1_id"], catch["bait2_id"])
@@ -212,6 +216,7 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
     waterbodies = {}
     for row in groups.values():
         row["weight_display"] = format_weight(row["max_weight_g"])
+        row["average_weight_display"] = format_weight(round(row["total_weight_g"] / row["record_count"]))
         row["bait_images"] = [image_url(bait_images.get(bid)) for bid in row["bait_ids"] if bid and bait_images.get(bid)]
         row["fish_details"] = sorted((
             {**fish, "image_url": image_url(fish_images.get(fish["fish_id"]))}

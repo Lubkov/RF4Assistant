@@ -77,10 +77,11 @@
   <div class="table-responsive">
     <table class="table table-hover align-middle records-table mb-0">
       <thead><tr>
-        <th scope="col">{% if selected_view == "bait" %}Наживка{% else %}Рыба{% endif %}</th>
-        <th scope="col" class="text-center records-count-column">Кол-во рекордов</th>
-        <th scope="col" class="text-end">Макс. вес</th>
-        <th scope="col">{% if selected_view == "bait" %}Виды рыб{% else %}Наживки{% endif %}</th>
+        <th scope="col" class="align-middle">{% if selected_view == "bait" %}Наживка{% else %}Вид рыбы{% endif %}</th>
+        <th scope="col" class="text-center records-count-column">Количество<br>рекордов</th>
+        <th scope="col" class="text-center">Средний<br>вес</th>
+        <th scope="col" class="text-center">Максимальный<br>вес</th>
+        <th scope="col" class="align-middle">{% if selected_view == "bait" %}Виды<br>рыб{% else %}Наживки{% endif %}</th>
       </tr></thead>
       <tbody>
         {% for row in waterbody.rows %}
@@ -95,7 +96,8 @@
             </div>
           </td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
-          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
+          <td class="text-center text-nowrap">{{ row.average_weight_display }}</td>
+          <td class="text-center text-nowrap">{{ row.weight_display }}</td>
           <td class="records-baits-cell">
             {% if row.fish_details|length > 1 %}
             <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">
@@ -143,7 +145,8 @@
             </div>
           </td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
-          <td class="text-end text-nowrap">{{ row.weight_display }}</td>
+          <td class="text-center text-nowrap">{{ row.average_weight_display }}</td>
+          <td class="text-center text-nowrap">{{ row.weight_display }}</td>
           <td class="records-baits-cell">
             {% if row.bait_details|length > 1 %}
             <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">
