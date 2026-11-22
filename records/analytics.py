@@ -54,6 +54,17 @@ def update_max_weight(row, catch, tier):
     row["max_weight_trophy"] = tier
 
 
+def _catch_details(catch, tier):
+    return {
+        "date": catch["caught_date"].isoformat(),
+        "date_display": catch["caught_date"].strftime("%d.%m.%Y"),
+        "weight_g": catch["weight_g"],
+        "weight_display": format_weight(catch["weight_g"]),
+        "trophy": tier,
+        "player": catch["player"],
+    }
+
+
 def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL", sort="count"):
     if isinstance(date_from, str):
         date_from = date.fromisoformat(date_from)
@@ -109,14 +120,9 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
         update_max_weight(row, catch, tier)
         bait_names, ids = _bait_combination(catch)
         row["catches"].append({
-            "date": catch["caught_date"].isoformat(),
-            "date_display": catch["caught_date"].strftime("%d.%m.%Y"),
+            **_catch_details(catch, tier),
             "bait_names": bait_names,
             "bait_ids": ids,
-            "weight_g": catch["weight_g"],
-            "weight_display": format_weight(catch["weight_g"]),
-            "trophy": tier,
-            "player": catch["player"],
         })
         bait = row["baits"].setdefault(bait_names, {
             "count": 0, "total_weight_g": 0,
@@ -245,7 +251,7 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
     groups = {}
     fields = (
         "waterbody_id", "waterbody_name", "fish_id", "fish_name",
-        "weight_g", "bait", "bait1_id", "bait2_id",
+        "weight_g", "bait", "bait1_id", "bait2_id", "caught_date", "player",
         "fish__trophy_weight", "fish__super_trophy_weight",
     )
     for catch in qs.values(*fields).iterator():
@@ -260,14 +266,20 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
         })
         row["record_count"] += 1
         row["total_weight_g"] += catch["weight_g"]
-        update_max_weight(row, catch, trophy_tier(catch))
+        tier = trophy_tier(catch)
+        update_max_weight(row, catch, tier)
         if not any(row["bait_ids"]):
             row["bait_ids"] = ids
         fish_key = ("id", catch["fish_id"]) if catch["fish_id"] is not None else ("name", catch["fish_name"])
         fish = row["fishes"].setdefault(fish_key, {
             "fish_id": catch["fish_id"], "fish": catch["fish_name"], "count": 0,
+            "total_weight_g": 0, "max_weight_g": 0, "max_weight_trophy": -1,
+            "catches": [],
         })
         fish["count"] += 1
+        fish["total_weight_g"] += catch["weight_g"]
+        update_max_weight(fish, catch, tier)
+        fish["catches"].append(_catch_details(catch, tier))
 
     fish_ids = {fish["fish_id"] for g in groups.values() for fish in g["fishes"].values() if fish["fish_id"] is not None}
     bait_ids = {bid for g in groups.values() for bid in g["bait_ids"] if bid is not None}
@@ -284,7 +296,13 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
         row["average_weight_display"] = format_weight(round(row["total_weight_g"] / row["record_count"]))
         row["bait_images"] = [image_url(bait_images.get(bid)) for bid in row["bait_ids"] if bid and bait_images.get(bid)]
         row["fish_details"] = sorted((
-            {**fish, "image_url": image_url(fish_images.get(fish["fish_id"]))}
+            {
+                **fish,
+                "image_url": image_url(fish_images.get(fish["fish_id"])),
+                "average_weight_display": format_weight(round(fish["total_weight_g"] / fish["count"])),
+                "weight_display": format_weight(fish["max_weight_g"]),
+                "catches": sorted(fish["catches"], key=lambda catch: (catch["weight_g"], catch["date"]), reverse=True),
+            }
             for fish in row["fishes"].values()
         ), key=lambda item: (-item["count"], item["fish"].casefold()))
         del row["bait_ids"]

@@ -28,9 +28,9 @@ def weekly_report(request):
     if view not in ("fish", "bait"):
         return HttpResponseBadRequest("Некорректный вид отчёта")
     sort = request.GET.get("sort", "count")
-    if view == "bait" and sort == "fish":
-        sort = "name"
-    if view == "fish" and sort == "name":
+    if view == "bait":
+        sort = "count"
+    elif sort == "name":
         sort = "fish"
     waterbodies = Waterbody.objects.order_by("sort_order", "name", "id")
     first_waterbody = waterbodies.values_list("pk", flat=True).first()
@@ -60,8 +60,8 @@ def weekly_report(request):
     tabs = {}
     for tab in ("fish", "bait"):
         query["view"] = tab
-        if tab == "bait" and query.get("sort") == "fish":
-            query["sort"] = "name"
+        if tab == "bait":
+            query.pop("sort", None)
         elif tab == "fish" and query.get("sort") == "name":
             query["sort"] = "fish"
         tabs[tab] = "?" + query.urlencode()
@@ -74,10 +74,7 @@ def weekly_report(request):
         "selected_fish": fish,
         "regions": REGION_NAMES,
         "selected_region": region,
-        "sort_options": (
-            (("count", "Количество рекордов"), ("weight", "Максимальный вес"), ("name", "Название наживки"))
-            if view == "bait" else SORT_OPTIONS
-        ),
+        "sort_options": SORT_OPTIONS,
         "selected_view": view,
         "view_urls": tabs,
     })

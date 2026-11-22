@@ -1,5 +1,88 @@
 "use strict";
 (() => {
+  const panel = document.getElementById("bait-records-panel");
+  if (!panel) return;
+
+  const title = panel.querySelector("#bait-records-title");
+  const count = panel.querySelector("#bait-records-count");
+  const back = panel.querySelector("#bait-records-back");
+  const summary = panel.querySelector("#bait-records-summary");
+  const details = panel.querySelector("#bait-records-details");
+  const summaryBody = summary.tBodies[0];
+  const detailsBody = details.tBodies[0];
+  const scrollArea = panel.querySelector(".offcanvas-body");
+  const sortButtons = [...details.querySelectorAll("[data-bait-sort]")];
+  const weightSort = details.querySelector('[data-bait-sort="weight"]');
+  let selectedRow;
+  let selectedFish;
+  let catches = [];
+
+  const sortCatches = (sortButton) => {
+    for (const button of sortButtons) {
+      button.closest("th").removeAttribute("aria-sort");
+    }
+    sortButton.closest("th").setAttribute("aria-sort", "descending");
+    const rows = sortButton.dataset.baitSort === "date"
+      ? [...catches].sort((first, second) => second.dataset.caughtDate.localeCompare(first.dataset.caughtDate))
+      : catches;
+    detailsBody.replaceChildren(...rows);
+    scrollArea.scrollTop = 0;
+  };
+
+  const showFish = (index) => {
+    selectedFish = summaryBody.rows[index];
+    const fishName = selectedFish.querySelector("[data-bait-fish-name]").textContent;
+    const template = selectedFish.querySelector("[data-bait-fish-catches]");
+    catches = [...template.content.cloneNode(true).querySelectorAll("tr")];
+    summary.hidden = true;
+    details.hidden = false;
+    back.firstElementChild.textContent = fishName;
+    back.setAttribute("aria-label", `Снять фильтр по виду «${fishName}»`);
+    back.hidden = false;
+    sortCatches(weightSort);
+  };
+
+  panel.addEventListener("show.bs.offcanvas", (event) => {
+    const trigger = event.relatedTarget;
+    selectedRow = trigger?.closest("tr");
+    if (!selectedRow) return;
+
+    selectedRow.classList.add("table-active");
+    const baitTrigger = selectedRow.querySelector("[data-bait-trigger]");
+    title.replaceChildren(...Array.from(baitTrigger.children, (child) => child.cloneNode(true)));
+    summaryBody.replaceChildren(selectedRow.querySelector("[data-bait-fish-summary]").content.cloneNode(true));
+    count.textContent = `Видов рыб: ${summaryBody.rows.length}`;
+    summary.hidden = false;
+    details.hidden = true;
+    back.hidden = true;
+    scrollArea.scrollTop = 0;
+    if (trigger.dataset.baitFishIndex !== undefined) showFish(trigger.dataset.baitFishIndex);
+  });
+
+  summary.addEventListener("click", (event) => {
+    const trigger = event.target.closest("[data-bait-fish-index]");
+    if (!trigger) return;
+
+    showFish(trigger.dataset.baitFishIndex);
+    back.focus();
+  });
+  back.addEventListener("click", () => {
+    summary.hidden = false;
+    details.hidden = true;
+    back.hidden = true;
+    scrollArea.scrollTop = 0;
+    selectedFish.querySelector("button").focus();
+  });
+  for (const button of sortButtons) {
+    button.addEventListener("click", () => sortCatches(button));
+  }
+
+  panel.addEventListener("hidden.bs.offcanvas", () => {
+    selectedRow?.classList.remove("table-active");
+  });
+})();
+
+(() => {
   const panel = document.getElementById("fish-records-panel");
   if (!panel) return;
 
@@ -24,7 +107,6 @@
     details.hidden = showSummary;
     scrollArea.scrollTop = 0;
     if (showSummary) {
-      count.textContent = `Записей: ${rows.length}`;
       return;
     }
 
@@ -40,7 +122,6 @@
         second.dataset.caughtDate.localeCompare(first.dataset.caughtDate));
     }
     detailsBody.replaceChildren(...visibleRows);
-    count.textContent = `Записей: ${visibleRows.length}`;
   };
 
   const filterByBait = (bait) => {
@@ -59,8 +140,11 @@
 
     selectedRow = row;
     selectedRow.classList.add("table-active");
-    title.textContent = row.querySelector(".records-fish-trigger").textContent.trim();
+    const fishTrigger = row.querySelector(".records-fish-trigger");
+    const icon = fishTrigger.previousElementSibling.cloneNode(true);
+    title.replaceChildren(icon, fishTrigger.textContent.trim());
     summaryBody.replaceChildren(row.querySelector("[data-fish-bait-summary]").content.cloneNode(true));
+    count.textContent = `Наживок: ${summaryBody.rows.length}`;
     detailsBody.replaceChildren();
     rows = [...records.content.cloneNode(true).querySelectorAll("tr")];
     sortButton = weight;

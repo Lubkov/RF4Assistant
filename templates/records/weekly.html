@@ -49,12 +49,14 @@
           {% for f in fishes %}<option value="{{ f.id }}"{% if f.id == selected_fish %} selected{% endif %}>{{ f.name }}</option>{% endfor %}
         </select>
       </div>
+      {% if selected_view == "fish" %}
       <div class="col-12 col-lg-4">
-        <label class="form-label" for="sort">Сортировать {% if selected_view == "bait" %}наживки{% else %}рыбу{% endif %} по</label>
+        <label class="form-label" for="sort">Сортировать рыбу по</label>
         <select id="sort" name="sort" class="form-select">
           {% for code, name in sort_options %}<option value="{{ code }}"{% if data.sort == code %} selected{% endif %}>{{ name }}</option>{% endfor %}
         </select>
       </div>
+      {% endif %}
     </form>
   </div>
 </section>
@@ -78,22 +80,53 @@
     <table class="table table-hover align-middle records-table mb-0">
       <thead><tr>
         <th scope="col" class="align-middle">{% if selected_view == "bait" %}Наживка{% else %}Вид рыбы{% endif %}</th>
-        <th scope="col" class="text-center records-count-column">Количество<br>рекордов</th>
+        <th scope="col" class="text-center records-count-column"{% if data.sort == "count" %} aria-sort="descending"{% endif %}>Количество<br>рекордов</th>
         <th scope="col" class="text-center">Средний<br>вес</th>
         <th scope="col" class="text-center">Максимальный<br>вес</th>
-        <th scope="col" class="align-middle">{% if selected_view == "bait" %}Виды<br>рыб{% else %}Наживки{% endif %}</th>
+        <th scope="col" class="align-middle text-nowrap">{% if selected_view == "bait" %}Виды рыбы{% else %}Наживки{% endif %}</th>
       </tr></thead>
       <tbody>
         {% for row in waterbody.rows %}
 {% if selected_view == "bait" %}
         <tr>
           <td>
-            <div class="d-flex align-items-center gap-2 records-fish-cell">
+            <button type="button" class="btn btn-link records-fish-trigger p-0 text-start d-flex align-items-center gap-2" data-bait-trigger
+                    data-bs-toggle="offcanvas" data-bs-target="#bait-records-panel" aria-controls="bait-records-panel">
               {% if row.bait_images %}
                 {% for icon_url in row.bait_images %}<img class="records-fish-icon" src="{{ icon_url }}" alt="" loading="lazy" width="36" height="36">{% endfor %}
               {% else %}<span class="records-fish-icon records-icon-placeholder" aria-hidden="true">🎣</span>{% endif %}
               <span class="fw-medium">{{ row.bait }}</span>
-            </div>
+            </button>
+            <template data-bait-fish-summary>
+              {% for fish in row.fish_details %}
+              <tr>
+                <th scope="row" class="records-panel-bait fw-normal">
+                  <button type="button" class="records-bait-trigger gap-2" data-bait-fish-index="{{ forloop.counter0 }}">
+                    {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
+                    <span data-bait-fish-name>{{ fish.fish }}</span>
+                  </button>
+                  <template data-bait-fish-catches>
+                    {% for catch in fish.catches %}
+                    <tr data-caught-date="{{ catch.date }}">
+                      <td class="text-nowrap">{{ catch.date_display }}</td>
+                      <td class="text-break">
+                        <span class="d-flex align-items-center gap-2">
+                          {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon flex-shrink-0" alt="" loading="lazy" width="24" height="24">{% endif %}
+                          <span>{{ fish.fish }}</span>
+                        </span>
+                      </td>
+                      <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=catch.trophy weight=catch.weight_display only %}</td>
+                      <td class="text-end"><span class="d-block text-truncate" title="{{ catch.player }}">{{ catch.player }}</span></td>
+                    </tr>
+                    {% endfor %}
+                  </template>
+                </th>
+                <td class="text-end">{{ fish.count }}</td>
+                <td class="text-end text-nowrap">{{ fish.average_weight_display }}</td>
+                <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=fish.max_weight_trophy weight=fish.weight_display only %}</td>
+              </tr>
+              {% endfor %}
+            </template>
           </td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
           <td class="text-center text-nowrap">{{ row.average_weight_display }}</td>
@@ -102,12 +135,9 @@
             {% if row.fish_details|length > 1 %}
             <details class="records-baits-details" data-record-expand data-expand-label="Развернуть список" data-collapse-label="Свернуть список">
               <summary class="records-baits-summary" aria-label="Виды рыб для {{ row.bait }}: развернуть или свернуть">
-                <span class="records-bait-preview" aria-hidden="true">
+                <span class="records-bait-preview">
                   {% for fish in row.fish_details %}
-                  <span class="records-bait-item" title="{{ fish.fish }} — {{ fish.count }}">
-                    {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
-                    <span>{{ fish.fish }}</span><strong class="records-bait-count">{{ fish.count }}</strong>
-                  </span>
+                  {% include 'records/_bait_fish_chip.html' %}
                   {% endfor %}
                 </span>
                 <span class="records-bait-toggle text-body-secondary small text-nowrap">
@@ -116,20 +146,14 @@
               </summary>
               <div class="records-bait-list records-bait-list-expanded">
                 {% for fish in row.fish_details %}
-                <span class="records-bait-item" title="{{ fish.fish }} — {{ fish.count }}">
-                  {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
-                  <span>{{ fish.fish }}</span><strong class="records-bait-count">{{ fish.count }}</strong>
-                </span>
+                {% include 'records/_bait_fish_chip.html' %}
                 {% endfor %}
               </div>
             </details>
             {% else %}
             <div class="records-bait-list records-bait-single">
               {% for fish in row.fish_details %}
-              <span class="records-bait-item" title="{{ fish.fish }} — {{ fish.count }}">
-                {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
-                <span>{{ fish.fish }}</span><strong class="records-bait-count">{{ fish.count }}</strong>
-              </span>
+              {% include 'records/_bait_fish_chip.html' %}
               {% endfor %}
             </div>
             {% endif %}
@@ -222,7 +246,7 @@
        aria-labelledby="fish-records-title">
   <div class="offcanvas-header">
     <div>
-      <h2 class="offcanvas-title h5" id="fish-records-title"></h2>
+      <h2 class="offcanvas-title h5 d-flex align-items-center gap-2" id="fish-records-title"></h2>
       <div class="small text-body-secondary" id="fish-records-count" aria-live="polite"></div>
       <button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="fish-records-bait-filter" hidden>
         <span></span> <span aria-hidden="true">×</span>
@@ -248,6 +272,44 @@
           <th scope="col" class="records-panel-date"><button type="button" class="btn btn-link records-panel-sort p-0" id="fish-records-date">Дата</button></th>
           <th scope="col" class="records-panel-bait">Приманка</th>
           <th scope="col" class="records-panel-weight text-end" aria-sort="descending"><button type="button" class="btn btn-link records-panel-sort p-0" id="fish-records-weight">Вес</button></th>
+          <th scope="col" class="records-panel-player text-end">Ник игрока</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</aside>
+{% elif selected_view == "bait" and data.rows %}
+<aside class="offcanvas offcanvas-end records-fish-panel" tabindex="-1" id="bait-records-panel"
+       aria-labelledby="bait-records-title">
+  <div class="offcanvas-header">
+    <div>
+      <h2 class="offcanvas-title h5 d-flex align-items-center gap-2" id="bait-records-title"></h2>
+      <div class="small text-body-secondary" id="bait-records-count"></div>
+      <button type="button" class="btn btn-outline-secondary btn-sm mt-2 text-start" id="bait-records-back" hidden>
+        <span></span> <span aria-hidden="true">×</span>
+      </button>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
+  </div>
+  <div class="offcanvas-body pt-0" tabindex="0" role="region" aria-label="Статистика по видам рыб">
+    <table class="table table-hover align-middle" id="bait-records-summary">
+      <thead class="sticky-top">
+        <tr>
+          <th scope="col" class="records-panel-bait">Виды рыбы</th>
+          <th scope="col" class="records-panel-count text-end" aria-sort="descending">Кол.</th>
+          <th scope="col" class="records-panel-average text-end">Avg</th>
+          <th scope="col" class="records-panel-weight text-end">Max</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <table class="table table-hover align-middle" id="bait-records-details" hidden>
+      <thead class="sticky-top">
+        <tr>
+          <th scope="col" class="records-panel-date"><button type="button" class="btn btn-link records-panel-sort p-0" data-bait-sort="date">Дата</button></th>
+          <th scope="col">Вид рыбы</th>
+          <th scope="col" class="records-panel-weight text-end" aria-sort="descending"><button type="button" class="btn btn-link records-panel-sort p-0" data-bait-sort="weight">Вес</button></th>
           <th scope="col" class="records-panel-player text-end">Ник игрока</th>
         </tr>
       </thead>
