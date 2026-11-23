@@ -1,0 +1,28 @@
+<template data-fish-bait-summary>
+  {% for group in row.bait_details %}
+  <tr>
+    <td class="records-panel-bait">
+      {% for bait in group.components %}
+      {% include 'records/_panel_bait.html' %}
+      {% endfor %}
+    </td>
+    <td class="text-end">{{ group.count }}</td>
+    <td class="text-end text-nowrap">{{ group.average_weight_display }}</td>
+    <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=group.max_weight_trophy weight=group.weight_display only %}</td>
+  </tr>
+  {% endfor %}
+</template>
+<template data-fish-records>
+  {% for catch in row.catches %}
+  <tr data-caught-date="{{ catch.date }}">
+    <td class="text-nowrap">{{ catch.date_display }}</td>
+    <td class="records-panel-bait">
+      {% for bait in catch.baits %}
+      {% include 'records/_panel_bait.html' %}
+      {% endfor %}
+    </td>
+    <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=catch.trophy weight=catch.weight_display only %}</td>
+    <td class="text-end"><span class="d-block text-truncate" data-record-truncate>{{ catch.player }}</span></td>
+  </tr>
+  {% endfor %}
+</template>

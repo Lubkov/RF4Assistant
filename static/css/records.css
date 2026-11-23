@@ -48,7 +48,7 @@
 }
 .records-bait-trigger:hover { color: var(--bs-link-hover-color); }
 .records-bait-trigger:focus-visible { outline: 2px solid var(--bs-primary); }
-#fish-records-bait-filter { overflow-wrap: anywhere; text-align: start; }
+#fish-records-bait-filter { min-width: 0; overflow-wrap: anywhere; text-align: start; }
 .records-panel-sort {
   --bs-btn-color: currentColor;
   font-weight: inherit;
@@ -70,50 +70,8 @@
   #fish-records-summary th { padding-inline: .25rem; }
 }
 .records-icon-placeholder { display: inline-flex; justify-content: center; align-items: center; font-size: 1.15rem; }
-.records-baits-cell { min-width: 0; cursor: pointer; }
-.records-baits-cell:has(.records-baits-fit), .records-baits-cell:has(.records-bait-single) { cursor: default; }
-.records-baits-details { min-width: 0; }
-.records-baits-summary {
-  list-style: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  min-width: 0;
-}
-.records-baits-summary::-webkit-details-marker { display: none; }
-.records-baits-summary:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
-.records-bait-preview {
-  display: flex;
-  flex: 1 1 auto;
-  min-width: 0;
-  align-items: center;
-  gap: .375rem;
-  overflow: hidden;
-  white-space: nowrap;
-
-}
-.records-bait-preview .records-bait-item { flex: 0 0 auto; }
-.records-bait-preview .records-bait-item[hidden] { display: none !important; }
-.records-baits-summary .records-bait-toggle {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  gap: .5rem;
-  cursor: pointer;
-}
-.records-baits-summary:hover .records-bait-toggle { color: var(--bs-body-color) !important; }
-/* If everything fits, the row is not expandable and its summary is inert. */
-.records-baits-details.records-baits-fit .records-baits-summary { cursor: default; }
-.records-baits-details.records-baits-fit .records-bait-toggle { display: none; }
-.records-baits-details.records-baits-fit .records-bait-preview { overflow: visible; }
-
-.records-baits-details[open] .records-bait-preview { display: none; }
-.records-baits-details[open] .records-baits-summary { justify-content: flex-end; }
+.records-baits-cell { min-width: 0; }
 .records-bait-list { display: flex; flex-wrap: wrap; align-items: center; gap: .375rem; }
-.records-bait-list-expanded { margin-top: .5rem; }
-.records-baits-details[open] .records-bait-list-expanded { will-change: height, opacity; }
-.records-bait-single { flex-wrap: nowrap; overflow: hidden; }
 .records-bait-item {
   display: inline-flex;
   align-items: center;
@@ -126,7 +84,31 @@
   white-space: nowrap;
 }
 .records-bait-icon { width: 24px; height: 24px; object-fit: contain; }
-.records-bait-count { color: var(--bs-body-color); font-variant-numeric: tabular-nums; }
+.records-bait-count {
+  flex: 0 0 auto;
+  margin-inline-start: .3rem;
+  padding-inline-start: .6rem;
+  border-inline-start: 1px solid var(--bs-secondary-color);
+  color: var(--bs-primary-text-emphasis);
+  font-size: .83rem;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.records-bait-count-mark { margin-inline-end: .2em; font-weight: normal; }
+.records-bait-more {
+  padding: .2rem .45rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: .45rem;
+  background: transparent;
+  color: var(--bs-secondary-color);
+  font-size: .83rem;
+  font-variant-numeric: tabular-nums;
+}
+.records-bait-more:hover {
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+}
+.records-bait-more:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .records-chevron { transition: none; } }
 
 @media (max-width: 767.98px) {

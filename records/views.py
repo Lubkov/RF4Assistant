@@ -1,7 +1,9 @@
 from datetime import timedelta
+from urllib.parse import urlencode
 
-from django.http import HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
 
 from fish.models import Fish
@@ -10,7 +12,7 @@ from .analytics import SORT_OPTIONS, report, bait_report
 from .sources import REGION_NAMES
 
 
-def weekly_report(request):
+def weekly_report(request, fish_details=False):
     today = timezone.localdate()
     try:
         days = int(request.GET.get("days", "1"))
@@ -24,6 +26,24 @@ def weekly_report(request):
     region = request.GET.get("region", "ALL").upper() or "ALL"
     if region != "ALL" and region not in REGION_NAMES:
         return HttpResponseBadRequest("Некорректный регион")
+    if fish_details:
+        try:
+            group = {}
+            for field in ("waterbody", "fish"):
+                group_id = request.GET.get(f"{field}_id")
+                if group_id is not None:
+                    group[f"{field}_id"] = int(group_id)
+                elif f"{field}_name" in request.GET:
+                    group[f"{field}_name"] = request.GET[f"{field}_name"]
+                else:
+                    raise ValueError("Missing record group")
+            rows = report(date_from=start, date_to=end, region=region, **group)["rows"]
+        except (ValueError, OverflowError):
+            return HttpResponseBadRequest("Некорректная группа рекордов")
+        if not rows:
+            raise Http404
+        return render(request, "records/_fish_details.html", {"row": rows[0]})
+
     view = request.GET.get("view", "fish")
     if view not in ("fish", "bait"):
         return HttpResponseBadRequest("Некорректный вид отчёта")
@@ -47,12 +67,30 @@ def weekly_report(request):
         ).order_by("name")
         if fish is not None and not fishes.filter(pk=fish).exists():
             fish = None
-        data = (bait_report if view == "bait" else report)(
+        report_filters = dict(
             date_from=start, date_to=end,
             waterbody_id=wb, fish_id=fish, region=region, sort=sort,
         )
+        if view == "fish":
+            data = report(**report_filters, bait_limit=3)
+        else:
+            data = bait_report(**report_filters)
+            for row in data["rows"]:
+                row["fish_preview"] = row["fish_details"][:3]
+                row["remaining_fish_count"] = len(row["fish_details"]) - len(row["fish_preview"])
     except (ValueError, OverflowError) as exc:
         return HttpResponseBadRequest(f"Некорректные параметры отчёта: {exc}")
+    if view == "fish":
+        details_url = reverse("records:fish_details")
+        for row in data["rows"]:
+            row["remaining_bait_count"] = row["bait_count"] - len(row["bait_details"])
+            params = {"days": days, "region": region}
+            for field in ("waterbody", "fish"):
+                if row[f"{field}_id"] is not None:
+                    params[f"{field}_id"] = row[f"{field}_id"]
+                else:
+                    params[f"{field}_name"] = row[field]
+            row["details_url"] = f"{details_url}?{urlencode(params)}"
     query = request.GET.copy()
     # Do not carry an invalid species over when switching between report tabs.
     if fish is None:

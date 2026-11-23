@@ -79,7 +79,10 @@ class WeeklyReportPageTests(TestCase):
         self.assertContains(response, 'data-record-days="7"')
 
     def test_icons_and_bait_combination_render(self):
-        import_weekly(WeeklyImportTests().make_payload())
+        payload = WeeklyImportTests().make_payload()
+        payload["records"][0]["caught_date"] = timezone.localdate().isoformat()
+        payload["records"][0]["waterbody"] = "р. Сура"
+        import_weekly(payload)
         catch = Catch.objects.get()
         # Assign stored paths; test does not require files to exist on disk.
         f = Fish.objects.get(name='Вьюн')
@@ -89,7 +92,7 @@ class WeeklyReportPageTests(TestCase):
         first.image = 'baits/sample.webp'
         first.save(update_fields=['image'])
         response = self.client.get('/records/', {
-            'date_from': '2026-11-11', 'date_to': '2026-11-11', 'sort': 'weight',
+            'waterbody_id': catch.waterbody_id, 'sort': 'weight',
         })
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Мотыль и Опарыш')
@@ -97,6 +100,37 @@ class WeeklyReportPageTests(TestCase):
         self.assertContains(response, 'baits/sample.webp')
         self.assertEqual(response.context['data']['total_unique_catches'], 1)
         self.assertEqual(sum(b['count'] for b in response.context['data']['rows'][0]['baits']), 1)
+
+    def test_fish_preview_limits_baits_and_loads_filtered_details_by_url(self):
+        today = timezone.localdate().isoformat()
+        for bait, player, region in (
+            ("Alpha", "FirstPlayer", "RU"),
+            ("Delta", "SecondPlayer", "RU"),
+            ("Delta", "ThirdPlayer", "RU"),
+            ("Beta", "FourthPlayer", "RU"),
+            ("Gamma", "FifthPlayer", "RU"),
+            ("Other", "OtherRegionPlayer", "GL"),
+        ):
+            payload = WeeklyImportTests().make_payload(region=region, bait=bait)
+            payload["records"][0].update(
+                caught_date=today, waterbody="р. Сура", fish="Unlisted fish", player=player,
+            )
+            import_weekly(payload)
+
+        waterbody = Waterbody.objects.get(name="р. Сура")
+        page = self.client.get("/records/", {"waterbody_id": waterbody.pk, "region": "RU"})
+        row, = page.context["data"]["rows"]
+        self.assertEqual([bait["bait"] for bait in row["bait_details"]], ["Delta", "Alpha", "Beta"])
+        self.assertContains(page, ">+1</button>")
+        self.assertNotContains(page, "Gamma")
+        self.assertNotContains(page, "FirstPlayer")
+        self.assertNotContains(page, "data-fish-records")
+
+        details = self.client.get(row["details_url"])
+        self.assertContains(details, "Gamma")
+        self.assertContains(details, "FirstPlayer")
+        self.assertNotContains(details, "OtherRegionPlayer")
+        self.assertEqual(len(details.context["row"]["catches"]), 5)
 
     def test_bad_sort_is_rejected(self):
         response = self.client.get('/records/', {

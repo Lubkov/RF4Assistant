@@ -2,5 +2,6 @@
         title="{{ fish.fish }} — {{ fish.count }}" data-bait-fish-index="{{ forloop.counter0 }}"
         data-bs-toggle="offcanvas" data-bs-target="#bait-records-panel" aria-controls="bait-records-panel">
   {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
-  <span>{{ fish.fish }}</span><strong class="records-bait-count">{{ fish.count }}</strong>
+  <span>{{ fish.fish }}</span>
+  <strong class="records-bait-count"><span class="records-bait-count-mark" aria-hidden="true">×</span>{{ fish.count }}</strong>
 </button>

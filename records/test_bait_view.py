@@ -1,4 +1,5 @@
 """Regression tests for the alternative weekly statistics grouping."""
+from datetime import date
 from unittest.mock import patch
 
 from django.test import TestCase
@@ -62,7 +63,6 @@ class BaitViewTests(TestCase):
         ])
 
     def test_view_tabs_and_preserved_filters(self):
-        from datetime import date
         waterbody = Waterbody.objects.get(name="р. Сура")
         with patch("records.views.timezone.localdate", return_value=date(2026, 11, 13)):
             response = self.client.get("/records/", {
@@ -73,7 +73,8 @@ class BaitViewTests(TestCase):
         self.assertContains(response, "По наживкам")
         self.assertContains(response, "Мотыль и Опарыш")
         self.assertContains(response, '<th scope="col" class="align-middle text-nowrap">Виды рыбы</th>', html=True)
-        self.assertContains(response, 'data-bs-target="#bait-records-panel"', count=7)
+        self.assertContains(response, 'data-bs-target="#bait-records-panel"', count=5)
+        self.assertNotContains(response, "records-bait-more")
         self.assertContains(response, 'id="bait-records-details" hidden')
         self.assertContains(response, 'data-caught-date="2026-11-11"', count=4)
         self.assertContains(response, "276 г")
@@ -81,6 +82,22 @@ class BaitViewTests(TestCase):
         self.assertNotIn("sort=", response.context["view_urls"]["bait"])
         self.assertIn("view=fish", response.context["view_urls"]["fish"])
         self.assertIn("days=3", response.context["view_urls"]["fish"])
+
+    def test_bait_preview_shows_three_species_and_counts_the_rest(self):
+        records = [
+            dict(self.payload["records"][2], fish=fish, weight_g=weight)
+            for fish, weight in (("Карп", 90), ("Линь", 80), ("Лещ", 70))
+        ]
+        import_weekly(dict(self.payload, records=records, record_count=len(records)))
+        waterbody = Waterbody.objects.get(name="р. Сура")
+        with patch("records.views.timezone.localdate", return_value=date(2026, 11, 11)):
+            response = self.client.get("/records/", {"view": "bait", "waterbody_id": waterbody.pk})
+        row = response.context["data"]["rows"][0]
+        self.assertEqual([fish["fish"] for fish in row["fish_preview"]], ["Вьюн", "Ерш", "Карп"])
+        self.assertContains(response, ">+2</button>")
+        self.assertContains(response, 'data-bs-target="#bait-records-panel"', count=7)
+        self.assertContains(response, 'data-bait-fish-name>Линь</span>')
+        self.assertContains(response, 'data-bait-fish-name>Лещ</span>')
 
     def test_invalid_view(self):
         self.assertEqual(self.client.get("/records/", {"view": "unknown"}).status_code, 400)

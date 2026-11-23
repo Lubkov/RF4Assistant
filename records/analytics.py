@@ -65,7 +65,10 @@ def _catch_details(catch, tier):
     }
 
 
-def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL", sort="count"):
+def report(
+    *, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL", sort="count",
+    bait_limit=None, fish_name=None, waterbody_name=None,
+):
     if isinstance(date_from, str):
         date_from = date.fromisoformat(date_from)
     if isinstance(date_to, str):
@@ -87,16 +90,23 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
     )
     if waterbody_id is not None:
         qs = qs.filter(waterbody_id=waterbody_id)
+    elif waterbody_name is not None:
+        qs = qs.filter(waterbody_id__isnull=True, waterbody_name=waterbody_name)
     if fish_id is not None:
         qs = qs.filter(fish_id=fish_id)
+    elif fish_name is not None:
+        qs = qs.filter(fish_id__isnull=True, fish_name=fish_name)
 
     groups = {}
+    include_catches = bait_limit is None
     # The query reads only required fields and avoids a DB request per record.
     values = (
         "waterbody_id", "waterbody_name", "fish_id", "fish_name", "weight_g",
-        "bait", "bait1_id", "bait2_id", "caught_date", "player",
+        "bait", "bait1_id", "bait2_id",
         "fish__trophy_weight", "fish__super_trophy_weight",
     )
+    if include_catches:
+        values += ("caught_date", "player")
     for catch in qs.values(*values).iterator():
         key = (
             ("id", catch["waterbody_id"]) if catch["waterbody_id"] is not None else ("name", catch["waterbody_name"]),
@@ -119,19 +129,21 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
         tier = trophy_tier(catch)
         update_max_weight(row, catch, tier)
         bait_names, ids = _bait_combination(catch)
-        row["catches"].append({
-            **_catch_details(catch, tier),
-            "bait_names": bait_names,
-            "bait_ids": ids,
-        })
+        if include_catches:
+            row["catches"].append({
+                **_catch_details(catch, tier),
+                "bait_names": bait_names,
+                "bait_ids": ids,
+            })
         bait = row["baits"].setdefault(bait_names, {
             "count": 0, "total_weight_g": 0,
             "max_weight_g": 0, "max_weight_trophy": -1,
             "ids": (None, None),
         })
         bait["count"] += 1
-        bait["total_weight_g"] += catch["weight_g"]
-        update_max_weight(bait, catch, tier)
+        if include_catches:
+            bait["total_weight_g"] += catch["weight_g"]
+            update_max_weight(bait, catch, tier)
         # Only the first bait has an icon on the source website, but both can
         # have local icons once they have appeared in the first position.
         if not any(bait["ids"]):
@@ -142,10 +154,21 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
         pk: image for pk, image in Fish.objects.filter(pk__in=fish_ids).values_list("pk", "image")
         if image
     }
+    for item in groups.values():
+        item["bait_count"] = len(item["baits"])
+        ranked_baits = sorted(
+            item["baits"].items(), key=lambda entry: (-entry[1]["count"], " и ".join(entry[0])),
+        )
+        item["ranked_baits"] = ranked_baits[:bait_limit]
+
     bait_ids = {
+        bid for group in groups.values() for _, bait in group["ranked_baits"]
+        for bid in bait["ids"] if bid is not None
+    }
+    bait_ids.update(
         bid for group in groups.values() for catch in group["catches"]
         for bid in catch["bait_ids"] if bid is not None
-    }
+    )
     bait_images = {
         pk: image for pk, image in Bait.objects.filter(pk__in=bait_ids).values_list("pk", "image")
         if image
@@ -173,18 +196,21 @@ def report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL",
         item["fish_image_url"] = image_url(fish_images.get(item["fish_id"]))
         item["weight_display"] = format_weight(item["max_weight_g"])
         item["average_weight_display"] = format_weight(round(item["total_weight_g"] / item["record_count"]))
-        item["bait_details"] = [
-            {
+        item["bait_details"] = []
+        for names, bait in item.pop("ranked_baits"):
+            detail = {
                 "bait": " и ".join(names),
                 "count": bait["count"],
-                "images": [image_url(bait_images.get(bid)) for bid in bait["ids"] if bid],
                 "components": bait_components(names, bait["ids"]),
-                "average_weight_display": format_weight(round(bait["total_weight_g"] / bait["count"])),
-                "weight_display": format_weight(bait["max_weight_g"]),
-                "max_weight_trophy": bait["max_weight_trophy"],
             }
-            for names, bait in sorted(item["baits"].items(), key=lambda entry: (-entry[1]["count"], " и ".join(entry[0])))
-        ]
+            if include_catches:
+                detail.update(
+                    images=[image_url(bait_images.get(bid)) for bid in bait["ids"] if bid],
+                    average_weight_display=format_weight(round(bait["total_weight_g"] / bait["count"])),
+                    weight_display=format_weight(bait["max_weight_g"]),
+                    max_weight_trophy=bait["max_weight_trophy"],
+                )
+            item["bait_details"].append(detail)
         item["baits"] = [{"bait": b["bait"], "count": b["count"]} for b in item["bait_details"]]
         wb_key = ("id", item["waterbody_id"]) if item["waterbody_id"] is not None else ("name", item["waterbody"])
         wb = waterbodies.setdefault(wb_key, {
