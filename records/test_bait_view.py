@@ -99,5 +99,37 @@ class BaitViewTests(TestCase):
         self.assertContains(response, 'data-bait-fish-name>Линь</span>')
         self.assertContains(response, 'data-bait-fish-name>Лещ</span>')
 
+    def test_pagination_limits_rows_and_preserves_filters_for_both_tabs(self):
+        records = [
+            dict(self.payload["records"][0], fish=f"Species {i:02}", bait=f"Bait {i:02}", weight_g=i)
+            for i in range(1, 24)
+        ]
+        import_weekly(dict(self.payload, records=records, record_count=len(records)))
+        waterbody = Waterbody.objects.get(name="р. Сура")
+        with patch("records.views.timezone.localdate", return_value=date(2026, 11, 12)):
+            for view in ("fish", "bait"):
+                with self.subTest(view=view):
+                    filters = {"view": view, "days": 2, "region": "RU", "waterbody_id": waterbody.pk}
+                    if view == "fish":
+                        filters["sort"] = "weight"
+                    first = self.client.get("/records/", filters)
+                    second = self.client.get("/records/", {**filters, "page": 2})
+                    self.assertEqual(len(first.context["page_groups"][0]["rows"]), 20)
+                    self.assertEqual(len(second.context["page_groups"][0]["rows"]), 5)
+                    visible_rows = first.context["page_obj"].object_list + second.context["page_obj"].object_list
+                    self.assertEqual(
+                        [row[view] for row in visible_rows],
+                        [row[view] for row in first.context["data"]["rows"]],
+                    )
+                    query = "&amp;".join(f"{key}={value}" for key, value in filters.items())
+                    self.assertContains(first, f'href="?{query}&amp;page=2"')
+                    self.assertNotIn("page=", second.context["view_urls"]["fish"])
+                    self.assertNotIn("page=", second.context["view_urls"]["bait"])
+                    if view == "fish":
+                        details = self.client.get(second.context["page_obj"][0]["details_url"])
+                        self.assertEqual(details.status_code, 200)
+                    else:
+                        self.assertContains(second, "data-bait-fish-summary", count=5)
+
     def test_invalid_view(self):
         self.assertEqual(self.client.get("/records/", {"view": "unknown"}).status_code, 400)

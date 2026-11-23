@@ -109,6 +109,7 @@
   color: var(--bs-body-color);
 }
 .records-bait-more:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+.records-pagination { overflow-x: auto; padding: .25rem; }
 @media (prefers-reduced-motion: reduce) { .records-chevron { transition: none; } }
 
 @media (max-width: 767.98px) {

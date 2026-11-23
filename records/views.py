@@ -1,6 +1,7 @@
 from datetime import timedelta
 from urllib.parse import urlencode
 
+from django.core.paginator import Paginator
 from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import render
 from django.urls import reverse
@@ -75,14 +76,26 @@ def weekly_report(request, fish_details=False):
             data = report(**report_filters, bait_limit=3)
         else:
             data = bait_report(**report_filters)
-            for row in data["rows"]:
-                row["fish_preview"] = row["fish_details"][:3]
-                row["remaining_fish_count"] = len(row["fish_details"]) - len(row["fish_preview"])
     except (ValueError, OverflowError) as exc:
         return HttpResponseBadRequest(f"Некорректные параметры отчёта: {exc}")
+
+    paginator = Paginator(data["rows"], 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    page_groups = []
+    offset = 0
+    start_index = page_obj.start_index() - 1
+    end_index = page_obj.end_index()
+    for group in data["waterbody_groups"]:
+        rows = group["rows"][max(0, start_index - offset):max(0, end_index - offset)]
+        if rows:
+            page_groups.append({**group, "rows": rows, "expanded": group["expanded"] or not page_groups})
+        offset += len(group["rows"])
+        if offset >= end_index:
+            break
+
     if view == "fish":
         details_url = reverse("records:fish_details")
-        for row in data["rows"]:
+        for row in page_obj:
             row["remaining_bait_count"] = row["bait_count"] - len(row["bait_details"])
             params = {"days": days, "region": region}
             for field in ("waterbody", "fish"):
@@ -91,10 +104,15 @@ def weekly_report(request, fish_details=False):
                 else:
                     params[f"{field}_name"] = row[field]
             row["details_url"] = f"{details_url}?{urlencode(params)}"
+    else:
+        for row in page_obj:
+            row["fish_preview"] = row["fish_details"][:3]
+            row["remaining_fish_count"] = len(row["fish_details"]) - len(row["fish_preview"])
     query = request.GET.copy()
-    # Do not carry an invalid species over when switching between report tabs.
+    query.pop("page", None)
     if fish is None:
         query.pop("fish_id", None)
+    page_query = query.copy()
     tabs = {}
     for tab in ("fish", "bait"):
         query["view"] = tab
@@ -105,6 +123,10 @@ def weekly_report(request, fish_details=False):
         tabs[tab] = "?" + query.urlencode()
     return render(request, "records/weekly.html", {
         "data": data,
+        "page_obj": page_obj,
+        "page_groups": page_groups,
+        "page_query": page_query,
+        "page_numbers": paginator.get_elided_page_range(page_obj.number, on_each_side=2, on_ends=1),
         "waterbodies": waterbodies,
         "selected_days": days,
         "fishes": fishes,

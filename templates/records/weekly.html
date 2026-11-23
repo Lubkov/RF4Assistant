@@ -66,7 +66,7 @@
   <a class="nav-link{% if selected_view == 'bait' %} active{% endif %}" href="{{ view_urls.bait }}"{% if selected_view == 'bait' %} aria-current="page"{% endif %}>{% include 'includes/records_icon.html' with kind='bait' %}<span>По наживкам</span></a>
 </nav>
 
-{% for waterbody in data.waterbody_groups %}
+{% for waterbody in page_groups %}
 <details class="card records-waterbody mb-3"{% if waterbody.expanded %} open{% endif %}>
   <summary class="card-header records-waterbody-heading">
     <span class="fw-semibold">{{ waterbody.name }}</span>
@@ -187,7 +187,29 @@
   <p class="text-body-secondary mb-0">Попробуй выбрать другой период, регион или водоём.</p>
 </div></div>
 {% endfor %}
-{% if selected_view == "fish" and data.rows %}
+{% if page_obj.has_other_pages %}
+<nav class="records-pagination d-flex align-items-center gap-3 mb-3" aria-label="Страницы рекордов">
+  <ul class="pagination mb-0">
+    {% if page_obj.has_previous %}
+    <li class="page-item"><a class="page-link" href="{% querystring page_query page=page_obj.previous_page_number %}" aria-label="Предыдущая страница">‹</a></li>
+    {% endif %}
+    {% for number in page_numbers %}
+      {% if number == page_obj.paginator.ELLIPSIS %}
+      <li class="page-item disabled"><span class="page-link">{{ number }}</span></li>
+      {% elif number == page_obj.number %}
+      <li class="page-item active"><span class="page-link" aria-current="page">{{ number }}</span></li>
+      {% else %}
+      <li class="page-item"><a class="page-link" href="{% querystring page_query page=number %}">{{ number }}</a></li>
+      {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+    <li class="page-item"><a class="page-link" href="{% querystring page_query page=page_obj.next_page_number %}" aria-label="Следующая страница">›</a></li>
+    {% endif %}
+  </ul>
+  <div class="small text-body-secondary text-nowrap">{{ page_obj.start_index }}–{{ page_obj.end_index }} из {{ page_obj.paginator.count }}</div>
+</nav>
+{% endif %}
+{% if selected_view == "fish" and page_obj.object_list %}
 <aside class="offcanvas offcanvas-end records-fish-panel" tabindex="-1" id="fish-records-panel"
        aria-labelledby="fish-records-title">
   <div class="offcanvas-header">
@@ -229,7 +251,7 @@
     </table>
   </div>
 </aside>
-{% elif selected_view == "bait" and data.rows %}
+{% elif selected_view == "bait" and page_obj.object_list %}
 <aside class="offcanvas offcanvas-end records-fish-panel" tabindex="-1" id="bait-records-panel"
        aria-labelledby="bait-records-title">
   <div class="offcanvas-header">
