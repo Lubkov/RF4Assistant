@@ -88,7 +88,7 @@
       <tbody>
         {% for row in waterbody.rows %}
 {% if selected_view == "bait" %}
-        <tr>
+        <tr data-bait-details-url="{{ row.details_url }}">
           <td>
             <button type="button" class="btn btn-link records-fish-trigger p-0 text-start d-flex align-items-center gap-2" data-bait-trigger
                     data-bs-toggle="offcanvas" data-bs-target="#bait-records-panel" aria-controls="bait-records-panel">
@@ -97,36 +97,6 @@
               {% else %}<span class="records-fish-icon records-icon-placeholder" aria-hidden="true">🎣</span>{% endif %}
               <span class="fw-medium">{{ row.bait }}</span>
             </button>
-            <template data-bait-fish-summary>
-              {% for fish in row.fish_details %}
-              <tr>
-                <th scope="row" class="records-panel-bait fw-normal">
-                  <button type="button" class="records-bait-trigger gap-2" data-bait-fish-index="{{ forloop.counter0 }}">
-                    {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon" alt="" loading="lazy" width="24" height="24">{% endif %}
-                    <span data-bait-fish-name>{{ fish.fish }}</span>
-                  </button>
-                  <template data-bait-fish-catches>
-                    {% for catch in fish.catches %}
-                    <tr data-caught-date="{{ catch.date }}">
-                      <td class="text-nowrap">{{ catch.date_display }}</td>
-                      <td class="text-break">
-                        <span class="d-flex align-items-center gap-2">
-                          {% if fish.image_url %}<img src="{{ fish.image_url }}" class="records-bait-icon flex-shrink-0" alt="" loading="lazy" width="24" height="24">{% endif %}
-                          <span>{{ fish.fish }}</span>
-                        </span>
-                      </td>
-                      <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=catch.trophy weight=catch.weight_display only %}</td>
-                      <td class="text-end"><span class="d-block text-truncate" title="{{ catch.player }}">{{ catch.player }}</span></td>
-                    </tr>
-                    {% endfor %}
-                  </template>
-                </th>
-                <td class="text-end">{{ fish.count }}</td>
-                <td class="text-end text-nowrap">{{ fish.average_weight_display }}</td>
-                <td class="text-end text-nowrap">{% include 'records/_weight.html' with trophy=fish.max_weight_trophy weight=fish.weight_display only %}</td>
-              </tr>
-              {% endfor %}
-            </template>
           </td>
           <td class="text-center fw-semibold records-count-column">{{ row.record_count }}</td>
           <td class="text-center text-nowrap">{{ row.average_weight_display }}</td>
@@ -265,7 +235,8 @@
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Закрыть"></button>
   </div>
   <div class="offcanvas-body pt-0" tabindex="0" role="region" aria-label="Статистика по видам рыб">
-    <table class="table table-hover align-middle" id="bait-records-summary">
+    <div id="bait-records-status" class="text-body-secondary" role="status" hidden></div>
+    <table class="table table-hover align-middle" id="bait-records-summary" hidden>
       <thead class="sticky-top">
         <tr>
           <th scope="col" class="records-panel-bait">Виды рыбы</th>

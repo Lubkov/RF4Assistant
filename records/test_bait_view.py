@@ -76,8 +76,8 @@ class BaitViewTests(TestCase):
         self.assertContains(response, 'data-bs-target="#bait-records-panel"', count=5)
         self.assertNotContains(response, "records-bait-more")
         self.assertContains(response, 'id="bait-records-details" hidden')
-        self.assertContains(response, 'data-caught-date="2026-11-11"', count=4)
-        self.assertContains(response, "276 г")
+        self.assertNotContains(response, "data-caught-date")
+        self.assertNotContains(response, "data-bait-fish-summary")
         self.assertEqual([row["record_count"] for row in response.context["data"]["rows"]], [3, 1])
         self.assertNotIn("sort=", response.context["view_urls"]["bait"])
         self.assertIn("view=fish", response.context["view_urls"]["fish"])
@@ -96,8 +96,14 @@ class BaitViewTests(TestCase):
         self.assertEqual([fish["fish"] for fish in row["fish_preview"]], ["Вьюн", "Ерш", "Карп"])
         self.assertContains(response, ">+2</button>")
         self.assertContains(response, 'data-bs-target="#bait-records-panel"', count=7)
-        self.assertContains(response, 'data-bait-fish-name>Линь</span>')
-        self.assertContains(response, 'data-bait-fish-name>Лещ</span>')
+        self.assertNotContains(response, "data-bait-fish-name")
+        with patch("records.views.timezone.localdate", return_value=date(2026, 11, 11)):
+            details = self.client.get(row["details_url"])
+        self.assertContains(details, 'data-bait-fish-name>Линь</span>')
+        self.assertContains(details, 'data-bait-fish-name>Лещ</span>')
+        self.assertContains(details, 'data-caught-date="2026-11-11"', count=6)
+        self.assertContains(details, "276 г")
+        self.assertNotContains(details, ">p4</span>")
 
     def test_pagination_limits_rows_and_preserves_filters_for_both_tabs(self):
         records = [
@@ -129,7 +135,9 @@ class BaitViewTests(TestCase):
                         details = self.client.get(second.context["page_obj"][0]["details_url"])
                         self.assertEqual(details.status_code, 200)
                     else:
-                        self.assertContains(second, "data-bait-fish-summary", count=5)
+                        self.assertContains(second, "data-bait-details-url", count=5)
+                        details = self.client.get(second.context["page_obj"][0]["details_url"])
+                        self.assertContains(details, "data-bait-fish-summary")
 
     def test_invalid_view(self):
         self.assertEqual(self.client.get("/records/", {"view": "unknown"}).status_code, 400)

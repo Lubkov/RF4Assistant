@@ -13,7 +13,7 @@ from .analytics import SORT_OPTIONS, report, bait_report
 from .sources import REGION_NAMES
 
 
-def weekly_report(request, fish_details=False):
+def weekly_report(request, fish_details=False, bait_details=False):
     today = timezone.localdate()
     try:
         days = int(request.GET.get("days", "1"))
@@ -27,6 +27,25 @@ def weekly_report(request, fish_details=False):
     region = request.GET.get("region", "ALL").upper() or "ALL"
     if region != "ALL" and region not in REGION_NAMES:
         return HttpResponseBadRequest("Некорректный регион")
+    if bait_details:
+        try:
+            params = {"date_from": start, "date_to": end, "region": region}
+            if "waterbody_id" in request.GET:
+                params["waterbody_id"] = int(request.GET["waterbody_id"])
+            else:
+                params["waterbody_name"] = request.GET["waterbody_name"]
+            if "fish_id" in request.GET:
+                params["fish_id"] = int(request.GET["fish_id"])
+            selected_bait = tuple(request.GET.getlist("bait"))
+            if not selected_bait or not all(selected_bait):
+                raise ValueError("Missing bait combination")
+            rows = bait_report(**params, selected_bait=selected_bait)["rows"]
+        except (KeyError, ValueError, OverflowError):
+            return HttpResponseBadRequest("Некорректная группа рекордов")
+        if not rows:
+            raise Http404
+        return render(request, "records/_bait_details.html", {"row": rows[0]})
+
     if fish_details:
         try:
             group = {}
@@ -75,7 +94,7 @@ def weekly_report(request, fish_details=False):
         if view == "fish":
             data = report(**report_filters, bait_limit=3)
         else:
-            data = bait_report(**report_filters)
+            data = bait_report(**report_filters, include_catches=False)
     except (ValueError, OverflowError) as exc:
         return HttpResponseBadRequest(f"Некорректные параметры отчёта: {exc}")
 
@@ -105,9 +124,18 @@ def weekly_report(request, fish_details=False):
                     params[f"{field}_name"] = row[field]
             row["details_url"] = f"{details_url}?{urlencode(params)}"
     else:
+        details_url = reverse("records:bait_details")
         for row in page_obj:
             row["fish_preview"] = row["fish_details"][:3]
             row["remaining_fish_count"] = len(row["fish_details"]) - len(row["fish_preview"])
+            params = {"days": days, "region": region, "bait": row["bait_names"]}
+            if row["waterbody_id"] is not None:
+                params["waterbody_id"] = row["waterbody_id"]
+            else:
+                params["waterbody_name"] = row["waterbody"]
+            if fish is not None:
+                params["fish_id"] = fish
+            row["details_url"] = f"{details_url}?{urlencode(params, doseq=True)}"
     query = request.GET.copy()
     query.pop("page", None)
     if fish is None:

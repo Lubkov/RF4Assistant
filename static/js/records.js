@@ -6,6 +6,7 @@
   const title = panel.querySelector("#bait-records-title");
   const count = panel.querySelector("#bait-records-count");
   const back = panel.querySelector("#bait-records-back");
+  const status = panel.querySelector("#bait-records-status");
   const summary = panel.querySelector("#bait-records-summary");
   const details = panel.querySelector("#bait-records-details");
   const summaryBody = summary.tBodies[0];
@@ -16,6 +17,7 @@
   let selectedRow;
   let selectedFish;
   let catches = [];
+  let request;
 
   const sortCatches = (sortButton) => {
     for (const button of sortButtons) {
@@ -42,21 +44,50 @@
     sortCatches(weightSort);
   };
 
-  panel.addEventListener("show.bs.offcanvas", (event) => {
+  panel.addEventListener("show.bs.offcanvas", async (event) => {
     const trigger = event.relatedTarget;
-    selectedRow = trigger?.closest("tr");
-    if (!selectedRow) return;
+    const row = trigger?.closest("[data-bait-details-url]");
+    if (!row) return;
 
+    request?.abort();
+    const controller = new AbortController();
+    request = controller;
+    selectedRow?.classList.remove("table-active");
+    selectedRow = row;
     selectedRow.classList.add("table-active");
     const baitTrigger = selectedRow.querySelector("[data-bait-trigger]");
     title.replaceChildren(...Array.from(baitTrigger.children, (child) => child.cloneNode(true)));
-    summaryBody.replaceChildren(selectedRow.querySelector("[data-bait-fish-summary]").content.cloneNode(true));
-    count.textContent = `Видов рыб: ${summaryBody.rows.length}`;
-    summary.hidden = false;
+    count.textContent = "";
+    summaryBody.replaceChildren();
+    detailsBody.replaceChildren();
+    summary.hidden = true;
     details.hidden = true;
     back.hidden = true;
+    status.textContent = "Загрузка рекордов…";
+    status.hidden = false;
     scrollArea.scrollTop = 0;
-    if (trigger.dataset.baitFishIndex !== undefined) showFish(trigger.dataset.baitFishIndex);
+
+    try {
+      const response = await fetch(row.dataset.baitDetailsUrl, { signal: controller.signal });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const html = await response.text();
+      if (controller.signal.aborted) return;
+
+      const fragment = new DOMParser().parseFromString(html, "text/html");
+      summaryBody.replaceChildren(fragment.querySelector("[data-bait-fish-summary]").content);
+      count.textContent = `Видов рыб: ${summaryBody.rows.length}`;
+      status.hidden = true;
+      summary.hidden = false;
+      if (trigger.dataset.baitFishKey !== undefined) {
+        const fish = [...summaryBody.querySelectorAll("[data-bait-fish-key]")].find(
+          (button) => button.dataset.baitFishKey === trigger.dataset.baitFishKey,
+        );
+        if (fish) showFish(fish.dataset.baitFishIndex);
+      }
+    } catch {
+      if (controller.signal.aborted) return;
+      status.textContent = "Не удалось загрузить рекорды. Откройте панель ещё раз.";
+    }
   });
 
   summary.addEventListener("click", (event) => {
@@ -77,7 +108,8 @@
     button.addEventListener("click", () => sortCatches(button));
   }
 
-  panel.addEventListener("hidden.bs.offcanvas", () => {
+  panel.addEventListener("hide.bs.offcanvas", () => {
+    request?.abort();
     selectedRow?.classList.remove("table-active");
   });
 })();

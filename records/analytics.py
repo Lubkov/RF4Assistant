@@ -250,7 +250,10 @@ def report(
 
 # Alternative presentation of the very same weekly catches: waterbody -> bait
 # combination -> fish species.  One catch is counted in exactly one combination.
-def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL", sort="count"):
+def bait_report(
+    *, date_from, date_to, waterbody_id=None, fish_id=None, region="ALL", sort="count",
+    include_catches=True, selected_bait=None, waterbody_name=None,
+):
     if isinstance(date_from, str):
         date_from = date.fromisoformat(date_from)
     if isinstance(date_to, str):
@@ -271,22 +274,29 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
     )
     if waterbody_id is not None:
         qs = qs.filter(waterbody_id=waterbody_id)
+    elif waterbody_name is not None:
+        qs = qs.filter(waterbody_id__isnull=True, waterbody_name=waterbody_name)
     if fish_id is not None:
         qs = qs.filter(fish_id=fish_id)
 
     groups = {}
     fields = (
         "waterbody_id", "waterbody_name", "fish_id", "fish_name",
-        "weight_g", "bait", "bait1_id", "bait2_id", "caught_date", "player",
+        "weight_g", "bait", "bait1_id", "bait2_id",
         "fish__trophy_weight", "fish__super_trophy_weight",
     )
+    if include_catches:
+        fields += ("caught_date", "player")
     for catch in qs.values(*fields).iterator():
         bait_names, ids = _bait_combination(catch)
+        if selected_bait is not None and bait_names != selected_bait:
+            continue
         wb_key = ("id", catch["waterbody_id"]) if catch["waterbody_id"] is not None else ("name", catch["waterbody_name"])
         group_key = (wb_key, bait_names)
         row = groups.setdefault(group_key, {
             "waterbody_id": catch["waterbody_id"], "waterbody": catch["waterbody_name"],
             "bait": " и ".join(bait_names), "bait_ids": (None, None),
+            "bait_names": bait_names,
             "max_weight_g": 0, "max_weight_trophy": -1,
             "total_weight_g": 0, "record_count": 0, "fishes": {},
         })
@@ -299,13 +309,15 @@ def bait_report(*, date_from, date_to, waterbody_id=None, fish_id=None, region="
         fish_key = ("id", catch["fish_id"]) if catch["fish_id"] is not None else ("name", catch["fish_name"])
         fish = row["fishes"].setdefault(fish_key, {
             "fish_id": catch["fish_id"], "fish": catch["fish_name"], "count": 0,
+            "key": f"{fish_key[0]}:{fish_key[1]}",
             "total_weight_g": 0, "max_weight_g": 0, "max_weight_trophy": -1,
             "catches": [],
         })
         fish["count"] += 1
         fish["total_weight_g"] += catch["weight_g"]
         update_max_weight(fish, catch, tier)
-        fish["catches"].append(_catch_details(catch, tier))
+        if include_catches:
+            fish["catches"].append(_catch_details(catch, tier))
 
     fish_ids = {fish["fish_id"] for g in groups.values() for fish in g["fishes"].values() if fish["fish_id"] is not None}
     bait_ids = {bid for g in groups.values() for bid in g["bait_ids"] if bid is not None}
